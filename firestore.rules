@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Mesmos e-mails de VITE_AUTH_ALLOWED_EMAILS no .env.local (minúsculas).
+    function usuarioAutorizado() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email in [
+          'carolbertinconsultorio@gmail.com',
+          'isacavenaghi245@gmail.com',
+          'carolbnasci@gmail.com',
+        ];
+    }
+
+    match /contatos/{contatoId} {
+      allow read: if usuarioAutorizado();
+      allow create: if usuarioAutorizado();
+      allow update: if usuarioAutorizado();
+      allow delete: if false;
+    }
+
+    // Nega qualquer outra coleção ou subcoleção.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

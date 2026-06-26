@@ -1,0 +1,156 @@
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-shell__conteudo {
+  flex: 1;
+  padding: 2rem 2.5rem;
+  overflow-x: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 72px;
+  padding: 1.25rem 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  flex-shrink: 0;
+  min-height: 100vh;
+}
+
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 2rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-sage);
+  color: #fff;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0 0.5rem;
+  flex: 1;
+}
+
+.sidebar__sair {
+  margin-top: auto;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.625rem 0.25rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.625rem;
+  cursor: pointer;
+}
+
+.sidebar__item--ativo {
+  background: var(--color-sage-light);
+  color: var(--color-sage);
+}
+
+.sidebar__icone {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn--primario {
+  background: var(--color-sage);
+  color: #fff;
+}
+
+.btn--primario:hover {
+  background: #345c4e;
+}
+
+.btn--secundario {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+
+.btn--secundario:hover {
+  background: var(--color-bg);
+}
+
+/* Form fields */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.campo__rotulo {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.campo__input {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.campo__input:focus {
+  outline: 2px solid var(--color-sage-light);
+  border-color: var(--color-sage);
+}
+
+.campo__textarea {
+  resize: vertical;
+  min-height: 4rem;
+}
+
+@media (max-width: 900px) {
+  .app-shell__conteudo {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar__rotulo {
+    display: none;
+  }
+
+  .sidebar {
+    width: 56px;
+  }
+}

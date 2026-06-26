@@ -1,0 +1,40 @@
+.iniciar-campanha-lote-modal__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.iniciar-campanha-lote-modal__lista {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.iniciar-campanha-lote-modal__lista--confirmacao {
+  font-size: 0.9375rem;
+}
+
+.iniciar-campanha-lote-modal__pergunta {
+  margin: 0.25rem 0 0;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.iniciar-campanha-lote-modal__destaque {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.iniciar-campanha-lote-modal__secao {
+  margin-top: 0.25rem;
+}
+
+.iniciar-campanha-lote-modal__subtitulo {
+  margin: 0 0 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}

@@ -1,0 +1,65 @@
+.remover-modal__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.remover-modal__corpo p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.remover-modal__aviso-liveclin {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.remover-modal__erro {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  font-size: 0.8125rem;
+}
+
+.modal-overlay--remover {
+  z-index: 300;
+}
+
+.modal--remover .btn--perigo {
+  background: var(--color-danger);
+  color: #fff;
+  border: 1px solid transparent;
+}
+
+.modal--remover .btn--perigo:hover:not(:disabled) {
+  background: #a93226;
+}
+
+.modal--remover .btn--perigo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modal--remover .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.modal--remover .btn--secundario {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.modal--remover .btn--secundario:hover:not(:disabled) {
+  background: var(--color-bg);
+}

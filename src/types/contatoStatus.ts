@@ -1,0 +1,9 @@
+export type ContatoStatus =
+  | 'NOVO'
+  | 'FOLLOW_UP_2_DIAS'
+  | 'REENGAJAMENTO_7_DIAS'
+  | 'DESAPEGO_10_DIAS'
+  | 'LEAD_QUENTE'
+  | 'PACIENTE_ATIVO'
+  | 'PACIENTE_INATIVO'
+  | 'PERDIDO'

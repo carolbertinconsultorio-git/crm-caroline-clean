@@ -1,0 +1,105 @@
+.oportunidades-page__cabecalho {
+  margin-bottom: 2rem;
+}
+
+.oportunidades-page__titulo {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.oportunidades-page__subtitulo {
+  margin: 0.5rem 0 0;
+  max-width: 40rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.oportunidades-page__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.oportunidade-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.oportunidade-card:hover {
+  border-color: var(--color-sage);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.04);
+}
+
+.oportunidade-card--em-breve {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.oportunidade-card--em-breve:hover {
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.oportunidade-card__icone {
+  flex-shrink: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.oportunidade-card__conteudo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.oportunidade-card__titulo {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.oportunidade-card__contador {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-sage);
+}
+
+.oportunidade-card__descricao {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.oportunidade-card__badge {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}

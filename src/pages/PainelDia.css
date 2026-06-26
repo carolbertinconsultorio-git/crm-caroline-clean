@@ -1,0 +1,135 @@
+.painel__topo {
+  margin-bottom: 2rem;
+}
+
+.painel__saudacao {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.painel__data {
+  margin: 0.25rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+.painel__subtitulo {
+  margin: 0.75rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+.resumo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.resumo__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.resumo__card--atrasado {
+  border-left: 4px solid var(--color-danger);
+}
+
+.resumo__card--hoje {
+  border-left: 4px solid var(--color-warning);
+}
+
+.resumo__card--semana {
+  border-left: 4px solid var(--color-sage);
+}
+
+.resumo__numero {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.resumo__card--atrasado .resumo__numero {
+  color: var(--color-danger);
+}
+
+.resumo__card--hoje .resumo__numero {
+  color: var(--color-warning);
+}
+
+.resumo__card--semana .resumo__numero {
+  color: var(--color-sage);
+}
+
+.resumo__rotulo {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.painel__secoes {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.secao__cabecalho {
+  margin-bottom: 1rem;
+}
+
+.secao__titulo {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.secao--atrasado .secao__titulo {
+  color: var(--color-danger);
+}
+
+.secao--hoje .secao__titulo {
+  color: var(--color-warning);
+}
+
+.secao--semana .secao__titulo {
+  color: var(--color-sage);
+}
+
+.secao__descricao {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.secao__vazio {
+  margin: 0;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.secao__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .resumo {
+    grid-template-columns: 1fr;
+  }
+}

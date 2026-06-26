@@ -1,0 +1,105 @@
+.inteligencia-comercial {
+  margin-bottom: 1.5rem;
+}
+
+.inteligencia-comercial__toggle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.inteligencia-comercial__toggle:hover {
+  border-color: var(--color-sage);
+  background: var(--color-bg);
+}
+
+.inteligencia-comercial__toggle-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.inteligencia-comercial__indicador {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-sage);
+  background: var(--color-sage-light);
+  border: 1px solid var(--color-sage);
+  white-space: nowrap;
+}
+
+.inteligencia-comercial__toggle-icone {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.inteligencia-comercial__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg);
+}
+
+.inteligencia-comercial__opcao {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.inteligencia-comercial__checkbox {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--color-sage);
+}
+
+.inteligencia-comercial__rotulo {
+  flex: 1;
+  user-select: none;
+}
+
+.inteligencia-comercial__grupo {
+  margin: 0.25rem 0 0;
+  padding: 0;
+  border: none;
+}
+
+.inteligencia-comercial__grupo-titulo {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.inteligencia-comercial__sublista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1.5rem;
+}
