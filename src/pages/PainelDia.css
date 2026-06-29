@@ -86,11 +86,53 @@
   margin-bottom: 1rem;
 }
 
+.secao--recolhida .secao__cabecalho {
+  margin-bottom: 0;
+}
+
 .secao__titulo {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text);
+}
+
+.secao__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.secao__toggle:hover .secao__toggle-texto {
+  opacity: 0.88;
+}
+
+.secao__toggle-texto {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.secao__contagem {
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.secao__icone {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--color-text-muted);
 }
 
 .secao--atrasado .secao__titulo {

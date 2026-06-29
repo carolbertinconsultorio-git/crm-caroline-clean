@@ -5,9 +5,7 @@
 .importacao-modal__corpo {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  overflow-y: auto;
+  gap: 1.375rem;
 }
 
 .importacao-modal__passo-titulo {

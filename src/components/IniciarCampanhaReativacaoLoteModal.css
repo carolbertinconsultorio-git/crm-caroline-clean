@@ -1,7 +1,7 @@
 .iniciar-campanha-lote-modal__corpo {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1.375rem;
 }
 
 .iniciar-campanha-lote-modal__lista {
@@ -16,7 +16,7 @@
 }
 
 .iniciar-campanha-lote-modal__pergunta {
-  margin: 0.25rem 0 0;
+  margin: 0;
   font-weight: 500;
   color: var(--color-text);
 }
@@ -29,7 +29,7 @@
 }
 
 .iniciar-campanha-lote-modal__secao {
-  margin-top: 0.25rem;
+  margin: 0;
 }
 
 .iniciar-campanha-lote-modal__subtitulo {

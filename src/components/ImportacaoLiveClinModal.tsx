@@ -320,7 +320,7 @@ export default function ImportacaoLiveClinModal({
           </button>
         </header>
 
-        <div className="importacao-modal__corpo">
+        <div className="modal__corpo importacao-modal__corpo">
           {etapa === 'selecao' && (
             <>
               <p className="importacao-modal__passo-titulo">Passo 1 — Selecionar arquivo</p>

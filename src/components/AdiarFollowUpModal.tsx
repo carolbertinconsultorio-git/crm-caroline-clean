@@ -55,7 +55,7 @@ export default function AdiarFollowUpModal({
           </button>
         </header>
 
-        <div className="adiar-modal__corpo">
+        <div className="modal__corpo adiar-modal__corpo">
           <p className="adiar-modal__info">
             O status permanece: <strong>{STATUS_FRASES[contato.status]}</strong>
           </p>

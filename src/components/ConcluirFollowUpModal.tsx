@@ -174,7 +174,7 @@ export default function ConcluirFollowUpModal({
           </button>
         </header>
 
-        <div className="followup-modal__corpo">
+        <div className="modal__corpo followup-modal__corpo">
           {etapa === 'resultado' && (
             <div className="followup-modal__opcoes">
               {opcoesVisiveis.map((opcao) => (

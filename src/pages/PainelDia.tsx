@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import ContatoCard from '../components/ContatoCard'
 import type { Contato } from '../types/contato'
 import type { Urgencia } from '../utils/agruparContatos'
 import { agruparContatos } from '../utils/agruparContatos'
 import { inicioDoDia } from '../utils/contatoHelpers'
 import './PainelDia.css'
+
+type SecaoId = 'atrasados' | 'hoje' | 'semana' | 'aguardando'
 
 type PainelDiaProps = {
   contatos: Contato[]
@@ -14,12 +17,25 @@ type PainelDiaProps = {
   onDesfazerEnvio: (id: string) => void
 }
 
+function estadoInicialSecoes(contatos: Contato[], hoje: Date): Record<SecaoId, boolean> {
+  const { estaSemana, aguardandoResposta } = agruparContatos(contatos, hoje)
+
+  return {
+    atrasados: true,
+    hoje: true,
+    semana: estaSemana.length > 0,
+    aguardando: aguardandoResposta.length > 0,
+  }
+}
+
 function SecaoContatos({
   titulo,
   descricao,
   contatos,
   urgencia,
   vazio,
+  aberta,
+  onAlternar,
   onAbrirContato,
   onConcluirFollowUp,
   onAdiar,
@@ -31,6 +47,8 @@ function SecaoContatos({
   contatos: Contato[]
   urgencia: Urgencia
   vazio: string
+  aberta: boolean
+  onAlternar: () => void
   onAbrirContato: (id: string) => void
   onConcluirFollowUp: (id: string) => void
   onAdiar: (id: string) => void
@@ -38,29 +56,45 @@ function SecaoContatos({
   onDesfazerEnvio?: (id: string) => void
 }) {
   return (
-    <section className={`secao secao--${urgencia}`}>
+    <section className={`secao secao--${urgencia}${aberta ? '' : ' secao--recolhida'}`}>
       <header className="secao__cabecalho">
-        <h2 className="secao__titulo">{titulo}</h2>
-        <p className="secao__descricao">{descricao}</p>
+        <h2 className="secao__titulo">
+          <button
+            type="button"
+            className="secao__toggle"
+            onClick={onAlternar}
+            aria-expanded={aberta}
+          >
+            <span className="secao__toggle-texto">
+              {titulo}
+              <span className="secao__contagem">({contatos.length})</span>
+            </span>
+            <span className="secao__icone" aria-hidden="true">
+              {aberta ? '˄' : '˅'}
+            </span>
+          </button>
+        </h2>
+        {aberta && <p className="secao__descricao">{descricao}</p>}
       </header>
-      {contatos.length === 0 ? (
-        <p className="secao__vazio">{vazio}</p>
-      ) : (
-        <div className="secao__lista">
-          {contatos.map((contato) => (
-            <ContatoCard
-              key={contato.id}
-              contato={contato}
-              urgencia={urgencia}
-              onAbrirContato={onAbrirContato}
-              onConcluirFollowUp={onConcluirFollowUp}
-              onAdiar={onAdiar}
-              onMensagemEnviada={onMensagemEnviada}
-              onDesfazerEnvio={onDesfazerEnvio}
-            />
-          ))}
-        </div>
-      )}
+      {aberta &&
+        (contatos.length === 0 ? (
+          <p className="secao__vazio">{vazio}</p>
+        ) : (
+          <div className="secao__lista">
+            {contatos.map((contato) => (
+              <ContatoCard
+                key={contato.id}
+                contato={contato}
+                urgencia={urgencia}
+                onAbrirContato={onAbrirContato}
+                onConcluirFollowUp={onConcluirFollowUp}
+                onAdiar={onAdiar}
+                onMensagemEnviada={onMensagemEnviada}
+                onDesfazerEnvio={onDesfazerEnvio}
+              />
+            ))}
+          </div>
+        ))}
     </section>
   )
 }
@@ -75,6 +109,12 @@ export default function PainelDia({
 }: PainelDiaProps) {
   const hoje = inicioDoDia(new Date())
   const { atrasados, paraHoje, estaSemana, aguardandoResposta } = agruparContatos(contatos, hoje)
+
+  const [secoesAbertas, setSecoesAbertas] = useState(() => estadoInicialSecoes(contatos, hoje))
+
+  function alternarSecao(id: SecaoId) {
+    setSecoesAbertas((atual) => ({ ...atual, [id]: !atual[id] }))
+  }
 
   const dataFormatada = hoje.toLocaleDateString('pt-BR', {
     weekday: 'long',
@@ -117,6 +157,8 @@ export default function PainelDia({
           contatos={atrasados}
           urgencia="atrasado"
           vazio="Nenhum contato atrasado."
+          aberta={secoesAbertas.atrasados}
+          onAlternar={() => alternarSecao('atrasados')}
           onAbrirContato={onAbrirContato}
           onConcluirFollowUp={onConcluirFollowUp}
           onAdiar={onAdiar}
@@ -128,6 +170,8 @@ export default function PainelDia({
           contatos={paraHoje}
           urgencia="hoje"
           vazio="Nenhum follow-up para hoje."
+          aberta={secoesAbertas.hoje}
+          onAlternar={() => alternarSecao('hoje')}
           onAbrirContato={onAbrirContato}
           onConcluirFollowUp={onConcluirFollowUp}
           onAdiar={onAdiar}
@@ -139,6 +183,8 @@ export default function PainelDia({
           contatos={aguardandoResposta}
           urgencia="aguardando"
           vazio="Nenhum contato aguardando resposta."
+          aberta={secoesAbertas.aguardando}
+          onAlternar={() => alternarSecao('aguardando')}
           onAbrirContato={onAbrirContato}
           onConcluirFollowUp={onConcluirFollowUp}
           onAdiar={onAdiar}
@@ -150,6 +196,8 @@ export default function PainelDia({
           contatos={estaSemana}
           urgencia="semana"
           vazio="Nenhum follow-up nesta semana."
+          aberta={secoesAbertas.semana}
+          onAlternar={() => alternarSecao('semana')}
           onAbrirContato={onAbrirContato}
           onConcluirFollowUp={onConcluirFollowUp}
           onAdiar={onAdiar}
