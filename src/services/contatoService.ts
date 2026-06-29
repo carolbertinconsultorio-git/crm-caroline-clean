@@ -148,6 +148,7 @@ function documentoParaContato(id: string, dados: DocumentData): Contato {
       ? normalizarCampoData(dados.campanhaIniciadaEm)
       : undefined,
     campanhaMensagem: dados.campanhaMensagem ? String(dados.campanhaMensagem) : undefined,
+    campanhaId: dados.campanhaId ? String(dados.campanhaId) : undefined,
     aguardandoRespostaDesde: normalizarCampoDataHora(dados.aguardandoRespostaDesde),
   }
 }
@@ -209,6 +210,10 @@ function contatoParaDocumento(dados: ContatoSemId): DocumentData {
 
   if (dados.campanhaMensagem !== undefined) {
     documento.campanhaMensagem = dados.campanhaMensagem
+  }
+
+  if (dados.campanhaId !== undefined) {
+    documento.campanhaId = dados.campanhaId
   }
 
   if (dados.aguardandoRespostaDesde !== undefined) {

@@ -1,4 +1,5 @@
 import { criarCampanha } from '../services/campanhaService'
+import type { Campanha } from '../types/campanha'
 import type { ConfiguracaoNovaCampanha } from '../types/configuracaoCampanha'
 import type { OrigemContatos } from '../features/contatos/carregarContatos'
 import { dataRelativa } from './contatoHelpers'
@@ -7,8 +8,8 @@ import { NOME_CAMPANHA_REATIVACAO } from './iniciarCampanhaLote'
 export async function criarCampanhaEntidadeEmFirestore(
   config: ConfiguracaoNovaCampanha,
   origemContatos: OrigemContatos,
-): Promise<void> {
-  if (origemContatos !== 'firestore') return
+): Promise<Campanha | null> {
+  if (origemContatos !== 'firestore') return null
 
   const agora = new Date().toISOString()
   const nome =
@@ -17,7 +18,7 @@ export async function criarCampanhaEntidadeEmFirestore(
   const mensagem = config.campanhaMensagem.trim() || undefined
 
   try {
-    await criarCampanha({
+    return await criarCampanha({
       nome,
       mensagem,
       tipo: config.tipo,
@@ -28,5 +29,6 @@ export async function criarCampanhaEntidadeEmFirestore(
     })
   } catch (erro) {
     console.error('Não foi possível criar campanha na coleção campanhas.', erro)
+    return null
   }
 }

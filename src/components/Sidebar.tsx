@@ -1,4 +1,4 @@
-export type TelaAtiva = 'hoje' | 'contatos' | 'oportunidades'
+export type TelaAtiva = 'hoje' | 'contatos' | 'campanhas' | 'oportunidades'
 
 type SidebarProps = {
   telaAtiva: TelaAtiva
@@ -39,6 +39,17 @@ export default function Sidebar({ telaAtiva, onNavegar, onSair }: SidebarProps) 
             ◎
           </span>
           <span className="sidebar__rotulo">Contatos</span>
+        </button>
+        <button
+          type="button"
+          className={`sidebar__item${telaAtiva === 'campanhas' ? ' sidebar__item--ativo' : ''}`}
+          onClick={() => onNavegar('campanhas')}
+          aria-current={telaAtiva === 'campanhas' ? 'page' : undefined}
+        >
+          <span className="sidebar__icone" aria-hidden="true">
+            📣
+          </span>
+          <span className="sidebar__rotulo">Campanhas</span>
         </button>
         <button
           type="button"

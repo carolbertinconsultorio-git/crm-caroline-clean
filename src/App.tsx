@@ -16,6 +16,7 @@ import AuthCarregandoPage from './pages/AuthCarregandoPage'
 import ContatosPage from './pages/ContatosPage'
 import LoginPage from './pages/LoginPage'
 import OportunidadesPage from './pages/OportunidadesPage'
+import CampanhasPage from './pages/CampanhasPage'
 import PainelDia from './pages/PainelDia'
 import type { Contato } from './types/contato'
 import { aplicarEncerrarCampanha, aplicarInicioCampanhaIndicacao, aplicarInicioCampanhaReativacao } from './utils/iniciarCampanha'
@@ -101,6 +102,10 @@ function contatoParaDadosFirestore(contato: Contato): Omit<Contato, 'id'> {
 
   if (contato.campanhaMensagem !== undefined) {
     dados.campanhaMensagem = contato.campanhaMensagem
+  }
+
+  if (contato.campanhaId !== undefined) {
+    dados.campanhaId = contato.campanhaId
   }
 
   if (contato.aguardandoRespostaDesde !== undefined) {
@@ -338,22 +343,38 @@ function App() {
   ): Promise<ResultadoCampanhaReativacaoLote> {
     const selecionados = contatos.filter((contato) => ids.includes(contato.id))
     const classificacao = classificarContatosParaCampanhaReativacaoLote(selecionados)
-    const contatosAtualizados = prepararContatosCampanhaReativacaoLote(classificacao.validos, {
+    let contatosParaSalvar = prepararContatosCampanhaReativacaoLote(classificacao.validos, {
       campanhaNome: config?.campanhaNome,
       campanhaMensagem: config?.campanhaMensagem,
     })
-    const idsAtualizados = new Set(contatosAtualizados.map((contato) => contato.id))
+
+    if (contatosParaSalvar.length > 0) {
+      const configCampanha: ConfiguracaoNovaCampanha = config ?? {
+        tipo: 'REATIVACAO',
+        campanhaNome: NOME_CAMPANHA_REATIVACAO,
+        campanhaMensagem: '',
+      }
+      const campanha = await criarCampanhaEntidadeEmFirestore(configCampanha, origemContatos)
+      if (campanha) {
+        contatosParaSalvar = contatosParaSalvar.map((contato) => ({
+          ...contato,
+          campanhaId: campanha.id,
+        }))
+      }
+    }
+
+    const idsAtualizados = new Set(contatosParaSalvar.map((contato) => contato.id))
 
     setContatos((atual) =>
       atual.map((contato) => {
         if (!idsAtualizados.has(contato.id)) return contato
-        return contatosAtualizados.find((atualizado) => atualizado.id === contato.id) ?? contato
+        return contatosParaSalvar.find((atualizado) => atualizado.id === contato.id) ?? contato
       }),
     )
 
     if (origemContatos === 'firestore') {
       await Promise.all(
-        contatosAtualizados.map((contato) =>
+        contatosParaSalvar.map((contato) =>
           atualizarContato(contato.id, contatoParaDadosFirestore(contato)).catch((erro) => {
             console.error(
               'Não foi possível iniciar campanha de reativação no Firestore.',
@@ -363,15 +384,6 @@ function App() {
           }),
         ),
       )
-    }
-
-    if (contatosAtualizados.length > 0) {
-      const configCampanha: ConfiguracaoNovaCampanha = config ?? {
-        tipo: 'REATIVACAO',
-        campanhaNome: NOME_CAMPANHA_REATIVACAO,
-        campanhaMensagem: '',
-      }
-      void criarCampanhaEntidadeEmFirestore(configCampanha, origemContatos)
     }
 
     return resultadoCampanhaReativacaoLote(classificacao)
@@ -384,21 +396,32 @@ function App() {
     const selecionados = contatos.filter((contato) => ids.includes(contato.id))
     const nome = config.campanhaNome.trim() || 'Campanha personalizada'
     const mensagem = config.campanhaMensagem.trim() || undefined
-    const contatosAtualizados = selecionados.map((contato) =>
+    let contatosParaSalvar = selecionados.map((contato) =>
       registrarCampanhaIniciada(contato, nome, mensagem),
     )
-    const idsAtualizados = new Set(contatosAtualizados.map((contato) => contato.id))
+
+    if (contatosParaSalvar.length > 0) {
+      const campanha = await criarCampanhaEntidadeEmFirestore(config, origemContatos)
+      if (campanha) {
+        contatosParaSalvar = contatosParaSalvar.map((contato) => ({
+          ...contato,
+          campanhaId: campanha.id,
+        }))
+      }
+    }
+
+    const idsAtualizados = new Set(contatosParaSalvar.map((contato) => contato.id))
 
     setContatos((atual) =>
       atual.map((contato) => {
         if (!idsAtualizados.has(contato.id)) return contato
-        return contatosAtualizados.find((atualizado) => atualizado.id === contato.id) ?? contato
+        return contatosParaSalvar.find((atualizado) => atualizado.id === contato.id) ?? contato
       }),
     )
 
     if (origemContatos === 'firestore') {
       await Promise.all(
-        contatosAtualizados.map((contato) =>
+        contatosParaSalvar.map((contato) =>
           atualizarContato(contato.id, contatoParaDadosFirestore(contato)).catch((erro) => {
             console.error(
               'Não foi possível registrar campanha personalizada no Firestore.',
@@ -408,10 +431,6 @@ function App() {
           }),
         ),
       )
-    }
-
-    if (contatosAtualizados.length > 0) {
-      void criarCampanhaEntidadeEmFirestore(config, origemContatos)
     }
   }
 
@@ -596,6 +615,9 @@ function App() {
             presetFiltros={presetFiltrosContatos}
             onPresetFiltrosAplicado={limparPresetFiltrosContatos}
           />
+        )}
+        {telaAtiva === 'campanhas' && (
+          <CampanhasPage origemContatos={origemContatos} />
         )}
         {telaAtiva === 'oportunidades' && (
           <OportunidadesPage
