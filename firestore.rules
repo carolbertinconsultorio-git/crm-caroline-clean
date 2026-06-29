@@ -21,6 +21,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /campanhas/{campanhaId} {
+      allow read: if usuarioAutorizado();
+      allow create: if usuarioAutorizado();
+      allow update: if usuarioAutorizado();
+      allow delete: if false;
+    }
+
     // Nega qualquer outra coleção ou subcoleção.
     match /{document=**} {
       allow read, write: if false;

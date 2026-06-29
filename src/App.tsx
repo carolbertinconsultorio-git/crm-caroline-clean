@@ -31,6 +31,7 @@ import {
 } from './utils/iniciarCampanhaLote'
 import type { ConfiguracaoNovaCampanha } from './types/configuracaoCampanha'
 import type { EstadoFiltrosContatos } from './utils/filtrosContatos'
+import { criarCampanhaEntidadeEmFirestore } from './utils/criarCampanhaEntidade'
 
 function gerarIdMockLocal(contatos: Contato[]): string {
   const idsNumericos = contatos
@@ -364,6 +365,15 @@ function App() {
       )
     }
 
+    if (contatosAtualizados.length > 0) {
+      const configCampanha: ConfiguracaoNovaCampanha = config ?? {
+        tipo: 'REATIVACAO',
+        campanhaNome: NOME_CAMPANHA_REATIVACAO,
+        campanhaMensagem: '',
+      }
+      void criarCampanhaEntidadeEmFirestore(configCampanha, origemContatos)
+    }
+
     return resultadoCampanhaReativacaoLote(classificacao)
   }
 
@@ -398,6 +408,10 @@ function App() {
           }),
         ),
       )
+    }
+
+    if (contatosAtualizados.length > 0) {
+      void criarCampanhaEntidadeEmFirestore(config, origemContatos)
     }
   }
 
