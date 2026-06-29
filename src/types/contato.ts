@@ -22,4 +22,7 @@ export interface Contato {
   objetivoFollowUp?: ObjetivoFollowUp
   ultimaReativacaoEm?: string
   ultimoResultadoReativacao?: ResultadoContato
+  campanhaNome?: string
+  campanhaIniciadaEm?: string
+  campanhaMensagem?: string
 }

@@ -3,9 +3,7 @@ import AdiarFollowUpModal from './components/AdiarFollowUpModal'
 import ConcluirFollowUpModal from './components/ConcluirFollowUpModal'
 import ContatoDrawer from './components/ContatoDrawer'
 import ImportacaoLiveClinModal from './components/ImportacaoLiveClinModal'
-import IniciarCampanhaModal, {
-  type TipoCampanhaDisponivel,
-} from './components/IniciarCampanhaModal'
+import IniciarCampanhaModal from './components/IniciarCampanhaModal'
 import NovoContatoModal from './components/NovoContatoModal'
 import RemoverContatoModal from './components/RemoverContatoModal'
 import { carregarContatos, type OrigemContatos } from './features/contatos/carregarContatos'
@@ -22,11 +20,16 @@ import PainelDia from './pages/PainelDia'
 import type { Contato } from './types/contato'
 import { aplicarEncerrarCampanha, aplicarInicioCampanhaIndicacao, aplicarInicioCampanhaReativacao } from './utils/iniciarCampanha'
 import {
+  aplicarAtualizacaoCampanha,
   classificarContatosParaCampanhaReativacaoLote,
+  NOME_CAMPANHA_REATIVACAO,
   prepararContatosCampanhaReativacaoLote,
+  registrarCampanhaIniciada,
   resultadoCampanhaReativacaoLote,
+  type DadosAtualizacaoCampanha,
   type ResultadoCampanhaReativacaoLote,
 } from './utils/iniciarCampanhaLote'
+import type { ConfiguracaoNovaCampanha } from './types/configuracaoCampanha'
 import type { EstadoFiltrosContatos } from './utils/filtrosContatos'
 
 function gerarIdMockLocal(contatos: Contato[]): string {
@@ -87,14 +90,29 @@ function contatoParaDadosFirestore(contato: Contato): Omit<Contato, 'id'> {
     dados.ultimoResultadoReativacao = contato.ultimoResultadoReativacao
   }
 
+  if (contato.campanhaNome !== undefined) {
+    dados.campanhaNome = contato.campanhaNome
+  }
+
+  if (contato.campanhaIniciadaEm !== undefined) {
+    dados.campanhaIniciadaEm = contato.campanhaIniciadaEm
+  }
+
+  if (contato.campanhaMensagem !== undefined) {
+    dados.campanhaMensagem = contato.campanhaMensagem
+  }
+
   return dados
 }
 
 function App() {
   const { status, usuario, erroLogin, entrando, entrarComGoogle, sair } = useAuth()
   const [contatos, setContatos] = useState<Contato[]>([])
-  const [origemContatos, setOrigemContatos] = useState<OrigemContatos>('mock')
+  const [origemContatos, setOrigemContatos] = useState<OrigemContatos>('firestore')
   const [carregandoContatos, setCarregandoContatos] = useState(true)
+  const [erroCarregamentoContatos, setErroCarregamentoContatos] = useState<string | null>(
+    null,
+  )
   const [telaAtiva, setTelaAtiva] = useState<TelaAtiva>('hoje')
   const [presetFiltrosContatos, setPresetFiltrosContatos] = useState<EstadoFiltrosContatos | null>(
     null,
@@ -138,11 +156,13 @@ function App() {
 
     let ativo = true
     setCarregandoContatos(true)
+    setErroCarregamentoContatos(null)
 
-    carregarContatos().then(({ contatos: contatosCarregados, origem }) => {
+    carregarContatos().then(({ contatos: contatosCarregados, origem, erroCarregamento }) => {
       if (!ativo) return
       setContatos(contatosCarregados)
       setOrigemContatos(origem)
+      setErroCarregamentoContatos(erroCarregamento ?? null)
       setCarregandoContatos(false)
     })
 
@@ -177,16 +197,21 @@ function App() {
   }
 
   function aplicarContatoAtualizado(contatoAtualizado: Contato) {
+    const contatoAnterior = contatos.find((c) => c.id === contatoAtualizado.id)
+
     setContatos((atual) =>
       atual.map((c) => (c.id === contatoAtualizado.id ? contatoAtualizado : c)),
     )
 
     if (origemContatos !== 'firestore') return
 
-    atualizarContato(
-      contatoAtualizado.id,
-      contatoParaDadosFirestore(contatoAtualizado),
-    ).catch((erro) => {
+    const dados = contatoParaDadosFirestore(contatoAtualizado)
+    const payload =
+      contatoAnterior?.observacoes && !contatoAtualizado.observacoes
+        ? { ...dados, observacoes: null }
+        : dados
+
+    atualizarContato(contatoAtualizado.id, payload).catch((erro) => {
       console.error('Não foi possível salvar contato no Firestore.', erro)
     })
   }
@@ -243,14 +268,27 @@ function App() {
     setIniciarCampanhaContatoId(null)
   }
 
-  function confirmarIniciarCampanha(tipo: TipoCampanhaDisponivel) {
+  function confirmarIniciarCampanha(config: ConfiguracaoNovaCampanha) {
     if (!contatoIniciarCampanha) return
 
-    if (tipo === 'REATIVACAO') {
-      aplicarContatoAtualizado(aplicarInicioCampanhaReativacao(contatoIniciarCampanha))
-    }
+    const mensagem = config.campanhaMensagem.trim() || undefined
+    const nome =
+      config.campanhaNome.trim() ||
+      (config.tipo === 'REATIVACAO' ? NOME_CAMPANHA_REATIVACAO : 'Campanha personalizada')
 
-    if (tipo === 'INDICACAO') {
+    if (config.tipo === 'REATIVACAO') {
+      aplicarContatoAtualizado(
+        registrarCampanhaIniciada(
+          aplicarInicioCampanhaReativacao(contatoIniciarCampanha),
+          nome,
+          mensagem,
+        ),
+      )
+    } else if (config.tipo === 'PERSONALIZADA') {
+      aplicarContatoAtualizado(
+        registrarCampanhaIniciada(contatoIniciarCampanha, nome, mensagem),
+      )
+    } else if (config.tipo === 'INDICACAO') {
       aplicarContatoAtualizado(aplicarInicioCampanhaIndicacao(contatoIniciarCampanha))
     }
 
@@ -259,10 +297,14 @@ function App() {
 
   async function confirmarIniciarCampanhaReativacaoLote(
     ids: string[],
+    config?: ConfiguracaoNovaCampanha,
   ): Promise<ResultadoCampanhaReativacaoLote> {
     const selecionados = contatos.filter((contato) => ids.includes(contato.id))
     const classificacao = classificarContatosParaCampanhaReativacaoLote(selecionados)
-    const contatosAtualizados = prepararContatosCampanhaReativacaoLote(classificacao.validos)
+    const contatosAtualizados = prepararContatosCampanhaReativacaoLote(classificacao.validos, {
+      campanhaNome: config?.campanhaNome,
+      campanhaMensagem: config?.campanhaMensagem,
+    })
     const idsAtualizados = new Set(contatosAtualizados.map((contato) => contato.id))
 
     setContatos((atual) =>
@@ -287,6 +329,75 @@ function App() {
     }
 
     return resultadoCampanhaReativacaoLote(classificacao)
+  }
+
+  async function confirmarCampanhaPersonalizadaLote(
+    ids: string[],
+    config: ConfiguracaoNovaCampanha,
+  ): Promise<void> {
+    const selecionados = contatos.filter((contato) => ids.includes(contato.id))
+    const nome = config.campanhaNome.trim() || 'Campanha personalizada'
+    const mensagem = config.campanhaMensagem.trim() || undefined
+    const contatosAtualizados = selecionados.map((contato) =>
+      registrarCampanhaIniciada(contato, nome, mensagem),
+    )
+    const idsAtualizados = new Set(contatosAtualizados.map((contato) => contato.id))
+
+    setContatos((atual) =>
+      atual.map((contato) => {
+        if (!idsAtualizados.has(contato.id)) return contato
+        return contatosAtualizados.find((atualizado) => atualizado.id === contato.id) ?? contato
+      }),
+    )
+
+    if (origemContatos === 'firestore') {
+      await Promise.all(
+        contatosAtualizados.map((contato) =>
+          atualizarContato(contato.id, contatoParaDadosFirestore(contato)).catch((erro) => {
+            console.error(
+              'Não foi possível registrar campanha personalizada no Firestore.',
+              contato.id,
+              erro,
+            )
+          }),
+        ),
+      )
+    }
+  }
+
+  async function confirmarAtualizarCampanhaLote(
+    ids: string[],
+    dados: DadosAtualizacaoCampanha,
+  ): Promise<void> {
+    const selecionados = contatos.filter((contato) => ids.includes(contato.id))
+    const contatosAtualizados = selecionados.map((contato) =>
+      aplicarAtualizacaoCampanha(contato, dados),
+    )
+    const idsAtualizados = new Set(contatosAtualizados.map((contato) => contato.id))
+
+    setContatos((atual) =>
+      atual.map((contato) => {
+        if (!idsAtualizados.has(contato.id)) return contato
+        return contatosAtualizados.find((atualizado) => atualizado.id === contato.id) ?? contato
+      }),
+    )
+
+    if (origemContatos !== 'firestore') return
+
+    await Promise.all(
+      contatosAtualizados.map((contato) =>
+        atualizarContato(contato.id, {
+          campanhaNome: contato.campanhaNome,
+          campanhaMensagem: contato.campanhaMensagem ?? null,
+        }).catch((erro) => {
+          console.error(
+            'Não foi possível atualizar campanha no Firestore.',
+            contato.id,
+            erro,
+          )
+        }),
+      ),
+    )
   }
 
   function encerrarCampanha(contato: Contato) {
@@ -349,9 +460,10 @@ function App() {
   }
 
   async function recarregarContatosCrm() {
-    const { contatos: contatosCarregados, origem } = await carregarContatos()
+    const { contatos: contatosCarregados, origem, erroCarregamento } = await carregarContatos()
     setContatos(contatosCarregados)
     setOrigemContatos(origem)
+    setErroCarregamentoContatos(erroCarregamento ?? null)
   }
 
   if (status === 'carregando') {
@@ -389,6 +501,24 @@ function App() {
     )
   }
 
+  if (erroCarregamentoContatos) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          minHeight: '100vh',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1.5rem',
+          textAlign: 'center',
+        }}
+        role="alert"
+      >
+        {erroCarregamentoContatos}
+      </div>
+    )
+  }
+
   return (
     <>
       <AppLayout telaAtiva={telaAtiva} onNavegar={setTelaAtiva} onSair={sair}>
@@ -409,6 +539,8 @@ function App() {
             onNovoContato={abrirModalNovoContato}
             onAbrirImportacaoLiveClin={abrirImportacaoLiveClin}
             onIniciarCampanhaReativacaoLote={confirmarIniciarCampanhaReativacaoLote}
+            onRegistrarCampanhaPersonalizadaLote={confirmarCampanhaPersonalizadaLote}
+            onAtualizarCampanhaLote={confirmarAtualizarCampanhaLote}
             presetFiltros={presetFiltrosContatos}
             onPresetFiltrosAplicado={limparPresetFiltrosContatos}
           />

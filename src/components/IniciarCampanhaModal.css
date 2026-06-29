@@ -62,8 +62,18 @@
   color: var(--color-text);
 }
 
-.iniciar-campanha-modal__opcao-descricao {
-  font-size: 0.875rem;
+.iniciar-campanha-modal__dica {
+  margin: -0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
   color: var(--color-text-muted);
-  line-height: 1.4;
+}
+
+.iniciar-campanha-modal__dica code {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+
+.modal--iniciar-campanha {
+  width: min(520px, 100%);
 }

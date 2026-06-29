@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import ContatoCard from '../components/ContatoCard'
 import InteligenciaComercialFiltros from '../components/InteligenciaComercialFiltros'
+import AtualizarCampanhaModal from '../components/AtualizarCampanhaModal'
 import IniciarCampanhaReativacaoLoteModal from '../components/IniciarCampanhaReativacaoLoteModal'
+import NovaCampanhaModal from '../components/NovaCampanhaModal'
+import type { ConfiguracaoNovaCampanha } from '../types/configuracaoCampanha'
 import type { Contato } from '../types/contato'
-import type { ResultadoCampanhaReativacaoLote } from '../utils/iniciarCampanhaLote'
+import {
+  todosContatosComCampanhaAtiva,
+  type DadosAtualizacaoCampanha,
+  type ResultadoCampanhaReativacaoLote,
+} from '../utils/iniciarCampanhaLote'
 import { STATUS_LABELS, TODOS_OS_STATUS } from '../utils/contatoHelpers'
 import {
   filtrosInteligenciaComercialAtivos,
@@ -24,7 +31,15 @@ type ContatosPageProps = {
   onAdiar: (id: string) => void
   onNovoContato: () => void
   onAbrirImportacaoLiveClin: () => void
-  onIniciarCampanhaReativacaoLote: (ids: string[]) => Promise<ResultadoCampanhaReativacaoLote>
+  onIniciarCampanhaReativacaoLote: (
+    ids: string[],
+    config?: ConfiguracaoNovaCampanha,
+  ) => Promise<ResultadoCampanhaReativacaoLote>
+  onRegistrarCampanhaPersonalizadaLote: (
+    ids: string[],
+    config: ConfiguracaoNovaCampanha,
+  ) => Promise<void>
+  onAtualizarCampanhaLote: (ids: string[], dados: DadosAtualizacaoCampanha) => Promise<void>
   presetFiltros?: EstadoFiltrosContatos | null
   onPresetFiltrosAplicado?: () => void
 }
@@ -37,6 +52,8 @@ export default function ContatosPage({
   onNovoContato,
   onAbrirImportacaoLiveClin,
   onIniciarCampanhaReativacaoLote,
+  onRegistrarCampanhaPersonalizadaLote,
+  onAtualizarCampanhaLote,
   presetFiltros = null,
   onPresetFiltrosAplicado,
 }: ContatosPageProps) {
@@ -49,6 +66,12 @@ export default function ContatosPage({
   )
   const [filtrosExtras, setFiltrosExtras] = useState(ESTADO_FILTROS_CONTATOS_INICIAL.filtrosExtras)
   const [idsSelecionados, setIdsSelecionados] = useState<Set<string>>(() => new Set())
+  const [configCampanhaLote, setConfigCampanhaLote] = useState<ConfiguracaoNovaCampanha | null>(
+    null,
+  )
+  const [modalNovaCampanhaAberto, setModalNovaCampanhaAberto] = useState(false)
+  const [modalAtualizarCampanhaAberto, setModalAtualizarCampanhaAberto] = useState(false)
+  const [contatosAtualizacaoCampanha, setContatosAtualizacaoCampanha] = useState<Contato[]>([])
   const [modalCampanhaReativacaoLoteAberto, setModalCampanhaReativacaoLoteAberto] =
     useState(false)
   const [contatosCampanhaLote, setContatosCampanhaLote] = useState<Contato[]>([])
@@ -129,7 +152,9 @@ export default function ContatosPage({
   async function confirmarCampanhaReativacaoLote() {
     const resultado = await onIniciarCampanhaReativacaoLote(
       contatosCampanhaLote.map((contato) => contato.id),
+      configCampanhaLote ?? undefined,
     )
+    setConfigCampanhaLote(null)
     limparSelecao()
     return resultado
   }
@@ -137,6 +162,43 @@ export default function ContatosPage({
   function abrirModalCampanhaReativacaoLote() {
     setContatosCampanhaLote(contatosSelecionados)
     setModalCampanhaReativacaoLoteAberto(true)
+  }
+
+  function abrirModalNovaCampanha() {
+    if (todosContatosComCampanhaAtiva(contatosSelecionados)) {
+      setContatosAtualizacaoCampanha(contatosSelecionados)
+      setModalAtualizarCampanhaAberto(true)
+      return
+    }
+
+    setModalNovaCampanhaAberto(true)
+  }
+
+  async function confirmarAtualizacaoCampanha(dados: DadosAtualizacaoCampanha) {
+    await onAtualizarCampanhaLote(
+      contatosAtualizacaoCampanha.map((contato) => contato.id),
+      dados,
+    )
+    setModalAtualizarCampanhaAberto(false)
+    setContatosAtualizacaoCampanha([])
+    limparSelecao()
+  }
+
+  function confirmarNovaCampanha(config: ConfiguracaoNovaCampanha) {
+    setModalNovaCampanhaAberto(false)
+
+    if (config.tipo === 'REATIVACAO') {
+      setConfigCampanhaLote(config)
+      abrirModalCampanhaReativacaoLote()
+      return
+    }
+
+    if (config.tipo === 'PERSONALIZADA') {
+      void onRegistrarCampanhaPersonalizadaLote(
+        contatosSelecionados.map((contato) => contato.id),
+        config,
+      ).then(() => limparSelecao())
+    }
   }
 
   return (
@@ -219,9 +281,9 @@ export default function ContatosPage({
               type="button"
               className="btn btn--primario"
               disabled={quantidadeSelecionados === 0}
-              onClick={abrirModalCampanhaReativacaoLote}
+              onClick={abrirModalNovaCampanha}
             >
-              ❤️ Iniciar campanha de reativação
+              📣 Nova campanha
             </button>
             <button
               type="button"
@@ -269,10 +331,31 @@ export default function ContatosPage({
         </div>
       )}
 
+      {modalAtualizarCampanhaAberto && (
+        <AtualizarCampanhaModal
+          contatos={contatosAtualizacaoCampanha}
+          onFechar={() => {
+            setModalAtualizarCampanhaAberto(false)
+            setContatosAtualizacaoCampanha([])
+          }}
+          onConfirmar={confirmarAtualizacaoCampanha}
+        />
+      )}
+
+      {modalNovaCampanhaAberto && (
+        <NovaCampanhaModal
+          onFechar={() => setModalNovaCampanhaAberto(false)}
+          onConfirmar={confirmarNovaCampanha}
+        />
+      )}
+
       {modalCampanhaReativacaoLoteAberto && (
         <IniciarCampanhaReativacaoLoteModal
           contatos={contatosCampanhaLote}
-          onFechar={() => setModalCampanhaReativacaoLoteAberto(false)}
+          onFechar={() => {
+            setModalCampanhaReativacaoLoteAberto(false)
+            setConfigCampanhaLote(null)
+          }}
           onConfirmar={confirmarCampanhaReativacaoLote}
         />
       )}

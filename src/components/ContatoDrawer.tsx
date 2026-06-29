@@ -3,6 +3,7 @@ import type { Contato } from '../types/contato'
 import type { ContatoStatus } from '../types/contatoStatus'
 import { OBJETIVO_FOLLOW_UP_LABELS } from '../types/objetivoFollowUp'
 import { TODOS_OS_STATUS, dataRelativa, formatarData } from '../utils/contatoHelpers'
+import { personalizarMensagemCampanha } from '../utils/campanhaMensagem'
 import { STATUS_FRASES } from '../utils/statusHumano'
 import BotaoConversar from './BotaoConversar'
 import './ContatoDrawer.css'
@@ -79,18 +80,31 @@ export default function ContatoDrawer({
   onSolicitarRemover,
 }: ContatoDrawerProps) {
   const [modoEdicao, setModoEdicao] = useState(false)
+  const [modoEdicaoObservacoes, setModoEdicaoObservacoes] = useState(false)
+  const [observacoesRascunho, setObservacoesRascunho] = useState(contato.observacoes ?? '')
   const [formulario, setFormulario] = useState<FormularioEdicao>(() =>
     contatoParaFormulario(contato),
   )
   const dataProximoFollowUpRef = useRef<HTMLInputElement>(null)
   const statusOriginalRef = useRef<ContatoStatus>(contato.status)
   const [mostrarAvisoStatus, setMostrarAvisoStatus] = useState(false)
+  const [mensagemCampanhaVisivel, setMensagemCampanhaVisivel] = useState(false)
+  const [mensagemCopiada, setMensagemCopiada] = useState(false)
 
   const podeIniciarCampanha =
     (contato.status === 'PACIENTE_INATIVO' || contato.status === 'PACIENTE_ATIVO') &&
     contato.objetivoFollowUp === undefined
 
   const temCampanhaAtiva = contato.objetivoFollowUp !== undefined
+  const temCampanhaRegistrada = Boolean(contato.campanhaNome)
+  const mensagemCampanhaPersonalizada = contato.campanhaMensagem
+    ? personalizarMensagemCampanha(contato.campanhaMensagem, contato.nome)
+    : ''
+
+  useEffect(() => {
+    setMensagemCampanhaVisivel(false)
+    setMensagemCopiada(false)
+  }, [contato.id, contato.campanhaMensagem])
 
   useEffect(() => {
     if (!modoEdicao) {
@@ -98,9 +112,32 @@ export default function ContatoDrawer({
     }
   }, [contato, modoEdicao])
 
+  useEffect(() => {
+    if (!modoEdicaoObservacoes) {
+      setObservacoesRascunho(contato.observacoes ?? '')
+    }
+  }, [contato, modoEdicaoObservacoes])
+
+  function alternarMensagemCampanha() {
+    setMensagemCampanhaVisivel((anterior) => !anterior)
+  }
+
+  async function copiarMensagemCampanha() {
+    if (!mensagemCampanhaPersonalizada) return
+
+    try {
+      await navigator.clipboard.writeText(mensagemCampanhaPersonalizada)
+      setMensagemCopiada(true)
+      window.setTimeout(() => setMensagemCopiada(false), 2000)
+    } catch {
+      setMensagemCopiada(false)
+    }
+  }
+
   function iniciarEdicao() {
     statusOriginalRef.current = contato.status
     setMostrarAvisoStatus(false)
+    setModoEdicaoObservacoes(false)
     setFormulario(contatoParaFormulario(contato))
     setModoEdicao(true)
   }
@@ -110,6 +147,25 @@ export default function ContatoDrawer({
     setMostrarAvisoStatus(false)
     setFormulario(contatoParaFormulario(contato))
     setModoEdicao(false)
+  }
+
+  function iniciarEdicaoObservacoes() {
+    setModoEdicao(false)
+    setObservacoesRascunho(contato.observacoes ?? '')
+    setModoEdicaoObservacoes(true)
+  }
+
+  function cancelarEdicaoObservacoes() {
+    setObservacoesRascunho(contato.observacoes ?? '')
+    setModoEdicaoObservacoes(false)
+  }
+
+  function salvarObservacoes() {
+    onSalvar({
+      ...contato,
+      observacoes: observacoesRascunho.trim() || undefined,
+    })
+    setModoEdicaoObservacoes(false)
   }
 
   function alterarStatus(novoStatus: ContatoStatus) {
@@ -298,47 +354,96 @@ export default function ContatoDrawer({
             </form>
           ) : (
             <>
-              {temCampanhaAtiva && contato.objetivoFollowUp && (
+              {(temCampanhaAtiva || temCampanhaRegistrada) && (
                 <section className="drawer__campanha-ativa" aria-label="Campanha ativa">
-                  <p className="drawer__campanha-ativa-titulo">❤️ Campanha ativa</p>
-                  <p className="drawer__campanha-ativa-objetivo">
-                    {OBJETIVO_FOLLOW_UP_LABELS[contato.objetivoFollowUp]}
+                  <p className="drawer__campanha-ativa-titulo">
+                    {temCampanhaAtiva ? '❤️ Campanha ativa' : '📣 Campanha registrada'}
                   </p>
-                  <p className="drawer__campanha-ativa-proximo">
-                    <span className="drawer__campanha-ativa-proximo-rotulo">Próximo contato:</span>
-                    <span className="drawer__campanha-ativa-proximo-data">
-                      {formatarData(contato.dataProximoFollowUp)}
-                    </span>
-                  </p>
-                  <div className="drawer__campanha-ativa-acoes">
-                    <BotaoConversar telefone={contato.telefone} />
-                    <button type="button" className="btn btn--secundario" onClick={onAdiar}>
-                      Adiar
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn--primario"
-                      onClick={onConcluirFollowUp}
-                    >
-                      Concluir follow-up
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn--secundario drawer__campanha-ativa-encerrar"
-                    onClick={onEncerrarCampanha}
-                  >
-                    Encerrar campanha
-                  </button>
+                  {temCampanhaAtiva && contato.objetivoFollowUp && (
+                    <p className="drawer__campanha-ativa-objetivo">
+                      {OBJETIVO_FOLLOW_UP_LABELS[contato.objetivoFollowUp]}
+                    </p>
+                  )}
+                  {contato.campanhaNome && (
+                    <p className="drawer__campanha-ativa-meta">
+                      <span className="drawer__campanha-ativa-meta-rotulo">Campanha:</span>
+                      <span className="drawer__campanha-ativa-meta-valor">
+                        {contato.campanhaNome}
+                      </span>
+                    </p>
+                  )}
+                  {contato.campanhaIniciadaEm && (
+                    <p className="drawer__campanha-ativa-meta">
+                      <span className="drawer__campanha-ativa-meta-rotulo">Iniciada em:</span>
+                      <span className="drawer__campanha-ativa-meta-valor">
+                        {formatarData(contato.campanhaIniciadaEm)}
+                      </span>
+                    </p>
+                  )}
+                  {contato.campanhaMensagem && (
+                    <div className="drawer__campanha-mensagem">
+                      <div className="drawer__campanha-mensagem-acoes">
+                        <button
+                          type="button"
+                          className="btn btn--secundario"
+                          onClick={alternarMensagemCampanha}
+                        >
+                          {mensagemCampanhaVisivel ? 'Ocultar mensagem' : 'Ver mensagem'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn--secundario"
+                          onClick={() => void copiarMensagemCampanha()}
+                        >
+                          {mensagemCopiada ? 'Copiado!' : 'Copiar mensagem'}
+                        </button>
+                      </div>
+                      {mensagemCampanhaVisivel && (
+                        <p className="drawer__campanha-mensagem-texto">
+                          {mensagemCampanhaPersonalizada}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {temCampanhaAtiva && (
+                    <>
+                      <p className="drawer__campanha-ativa-proximo">
+                        <span className="drawer__campanha-ativa-proximo-rotulo">Próximo contato:</span>
+                        <span className="drawer__campanha-ativa-proximo-data">
+                          {formatarData(contato.dataProximoFollowUp)}
+                        </span>
+                      </p>
+                      <div className="drawer__campanha-ativa-acoes">
+                        <BotaoConversar telefone={contato.telefone} />
+                        <button type="button" className="btn btn--secundario" onClick={onAdiar}>
+                          Adiar
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn--primario"
+                          onClick={onConcluirFollowUp}
+                        >
+                          Concluir follow-up
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn--secundario drawer__campanha-ativa-encerrar"
+                        onClick={onEncerrarCampanha}
+                      >
+                        Encerrar campanha
+                      </button>
+                    </>
+                  )}
                 </section>
               )}
 
               <section className="drawer__secao">
                 <h3 className="drawer__secao-titulo">Informações</h3>
-                <dl className="drawer__lista">
+                <dl className="drawer__lista drawer__lista--grid">
                   <div>
                     <dt>Telefone</dt>
-                    <dd>{contato.telefone}</dd>
+                    <dd className="drawer__valor-destaque">{contato.telefone}</dd>
                   </div>
                   <div>
                     <dt>Origem</dt>
@@ -350,24 +455,14 @@ export default function ContatoDrawer({
                       <dd>{contato.plano}</dd>
                     </div>
                   )}
-                  {contato.dataFimPlano && (
-                    <div>
-                      <dt>Fim do plano</dt>
-                      <dd>{formatarData(contato.dataFimPlano)}</dd>
-                    </div>
-                  )}
-                  {contato.diasRestantes !== undefined && (
-                    <div>
-                      <dt>Dias restantes</dt>
-                      <dd>{contato.diasRestantes}</dd>
-                    </div>
-                  )}
-                </dl>
-              </section>
-
-              <section className="drawer__secao">
-                <h3 className="drawer__secao-titulo">Datas</h3>
-                <dl className="drawer__lista">
+                  <div>
+                    <dt>Status</dt>
+                    <dd>
+                      <span className="drawer__status drawer__status--inline">
+                        {STATUS_FRASES[contato.status]}
+                      </span>
+                    </dd>
+                  </div>
                   <div>
                     <dt>Primeiro contato</dt>
                     <dd>{formatarData(contato.dataPrimeiroContato)}</dd>
@@ -380,15 +475,72 @@ export default function ContatoDrawer({
                     <dt>Próximo follow-up</dt>
                     <dd>{formatarData(contato.dataProximoFollowUp)}</dd>
                   </div>
+                  {contato.diasRestantes !== undefined && (
+                    <div>
+                      <dt>Dias restantes</dt>
+                      <dd>{contato.diasRestantes}</dd>
+                    </div>
+                  )}
+                  {contato.dataFimPlano && (
+                    <div className="drawer__item--largura-total">
+                      <dt>Fim do plano</dt>
+                      <dd>{formatarData(contato.dataFimPlano)}</dd>
+                    </div>
+                  )}
                 </dl>
               </section>
 
-              {contato.observacoes && (
-                <section className="drawer__secao">
-                  <h3 className="drawer__secao-titulo">Observações</h3>
+              <section className="drawer__secao">
+                <div className="drawer__secao-cabecalho">
+                  <h3 className="drawer__secao-titulo drawer__secao-titulo--inline">
+                    Observações
+                  </h3>
+                  {!modoEdicaoObservacoes && (
+                    <button
+                      type="button"
+                      className="drawer__secao-acao"
+                      onClick={iniciarEdicaoObservacoes}
+                    >
+                      {contato.observacoes ? 'Editar' : 'Adicionar'}
+                    </button>
+                  )}
+                </div>
+
+                {modoEdicaoObservacoes ? (
+                  <div className="drawer__observacoes-edicao">
+                    <textarea
+                      className="campo__input campo__textarea"
+                      value={observacoesRascunho}
+                      onChange={(e) => setObservacoesRascunho(e.target.value)}
+                      rows={4}
+                      placeholder="Observações internas sobre o contato"
+                      aria-label="Observações do contato"
+                    />
+                    <div className="drawer__observacoes-acoes">
+                      <button
+                        type="button"
+                        className="btn btn--secundario"
+                        onClick={cancelarEdicaoObservacoes}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--primario"
+                        onClick={salvarObservacoes}
+                      >
+                        Salvar
+                      </button>
+                    </div>
+                  </div>
+                ) : contato.observacoes ? (
                   <p className="drawer__observacoes">{contato.observacoes}</p>
-                </section>
-              )}
+                ) : (
+                  <p className="drawer__observacoes drawer__observacoes--vazio">
+                    Nenhuma observação registrada.
+                  </p>
+                )}
+              </section>
             </>
           )}
         </div>

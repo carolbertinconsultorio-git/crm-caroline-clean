@@ -19,8 +19,13 @@ import { db } from './firebase'
 const COLECAO_CONTATOS = 'contatos'
 
 type ContatoSemId = Omit<Contato, 'id'>
-type ContatoAtualizacao = Omit<Partial<ContatoSemId>, 'objetivoFollowUp'> & {
+type ContatoAtualizacao = Omit<
+  Partial<ContatoSemId>,
+  'objetivoFollowUp' | 'observacoes' | 'campanhaMensagem'
+> & {
   objetivoFollowUp?: ObjetivoFollowUp | null
+  observacoes?: string | null
+  campanhaMensagem?: string | null
 }
 
 function resolverResultadoReativacao(valor: unknown): ResultadoContato | undefined {
@@ -119,6 +124,11 @@ function documentoParaContato(id: string, dados: DocumentData): Contato {
       ? normalizarCampoData(dados.ultimaReativacaoEm)
       : undefined,
     ultimoResultadoReativacao: resolverResultadoReativacao(dados.ultimoResultadoReativacao),
+    campanhaNome: dados.campanhaNome ? String(dados.campanhaNome) : undefined,
+    campanhaIniciadaEm: dados.campanhaIniciadaEm
+      ? normalizarCampoData(dados.campanhaIniciadaEm)
+      : undefined,
+    campanhaMensagem: dados.campanhaMensagem ? String(dados.campanhaMensagem) : undefined,
   }
 }
 
@@ -167,6 +177,18 @@ function contatoParaDocumento(dados: ContatoSemId): DocumentData {
 
   if (dados.ultimoResultadoReativacao !== undefined) {
     documento.ultimoResultadoReativacao = dados.ultimoResultadoReativacao
+  }
+
+  if (dados.campanhaNome !== undefined) {
+    documento.campanhaNome = dados.campanhaNome
+  }
+
+  if (dados.campanhaIniciadaEm !== undefined) {
+    documento.campanhaIniciadaEm = dados.campanhaIniciadaEm
+  }
+
+  if (dados.campanhaMensagem !== undefined) {
+    documento.campanhaMensagem = dados.campanhaMensagem
   }
 
   return documento

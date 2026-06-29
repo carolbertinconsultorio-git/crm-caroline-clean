@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import type { Contato } from '../types/contato'
 import type { ConfiguracaoNovaCampanha, TipoNovaCampanha } from '../types/configuracaoCampanha'
 import { NOME_CAMPANHA_REATIVACAO } from '../utils/iniciarCampanhaLote'
-import './IniciarCampanhaModal.css'
+import './NovaCampanhaModal.css'
 import './NovoContatoModal.css'
 
-type IniciarCampanhaModalProps = {
-  contato: Contato
+type NovaCampanhaModalProps = {
   onFechar: () => void
-  onConfirmar: (config: ConfiguracaoNovaCampanha) => void | Promise<void>
+  onConfirmar: (config: ConfiguracaoNovaCampanha) => void
 }
 
 const NOME_PADRAO_POR_TIPO: Record<Exclude<TipoNovaCampanha, 'INDICACAO'>, string> = {
@@ -16,15 +14,10 @@ const NOME_PADRAO_POR_TIPO: Record<Exclude<TipoNovaCampanha, 'INDICACAO'>, strin
   PERSONALIZADA: '',
 }
 
-export default function IniciarCampanhaModal({
-  contato,
-  onFechar,
-  onConfirmar,
-}: IniciarCampanhaModalProps) {
+export default function NovaCampanhaModal({ onFechar, onConfirmar }: NovaCampanhaModalProps) {
   const [tipo, setTipo] = useState<TipoNovaCampanha>('REATIVACAO')
   const [campanhaNome, setCampanhaNome] = useState(NOME_CAMPANHA_REATIVACAO)
   const [campanhaMensagem, setCampanhaMensagem] = useState('')
-  const [salvando, setSalvando] = useState(false)
 
   function alterarTipo(novoTipo: TipoNovaCampanha) {
     if (novoTipo === 'INDICACAO') return
@@ -33,52 +26,43 @@ export default function IniciarCampanhaModal({
     setCampanhaNome(NOME_PADRAO_POR_TIPO[novoTipo])
   }
 
-  async function confirmar() {
-    if (salvando || tipo === 'INDICACAO') return
+  function confirmar() {
+    if (tipo === 'INDICACAO') return
 
     const nome =
       campanhaNome.trim() ||
       (tipo === 'REATIVACAO' ? NOME_CAMPANHA_REATIVACAO : 'Campanha personalizada')
 
-    setSalvando(true)
-    try {
-      await onConfirmar({
-        tipo,
-        campanhaNome: nome,
-        campanhaMensagem: campanhaMensagem.trim(),
-      })
-    } finally {
-      setSalvando(false)
-    }
+    onConfirmar({
+      tipo,
+      campanhaNome: nome,
+      campanhaMensagem: campanhaMensagem.trim(),
+    })
   }
 
   const podeConfirmar = tipo === 'REATIVACAO' || tipo === 'PERSONALIZADA'
 
   return (
-    <div
-      className="modal-overlay modal-overlay--iniciar-campanha"
-      onClick={onFechar}
-      role="presentation"
-    >
+    <div className="modal-overlay" onClick={onFechar} role="presentation">
       <div
-        className="modal modal--iniciar-campanha"
+        className="modal modal--nova-campanha"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="iniciar-campanha-titulo"
+        aria-labelledby="nova-campanha-titulo"
       >
         <header className="modal__cabecalho">
-          <h2 id="iniciar-campanha-titulo" className="modal__titulo">
-            Iniciar campanha
+          <h2 id="nova-campanha-titulo" className="modal__titulo">
+            Nova campanha
           </h2>
           <button type="button" className="modal__fechar" onClick={onFechar} aria-label="Fechar">
             ×
           </button>
         </header>
 
-        <div className="modal__corpo iniciar-campanha-modal__corpo">
-          <p className="iniciar-campanha-modal__texto">
-            Defina a campanha para <strong>{contato.nome}</strong>.
+        <div className="modal__corpo nova-campanha-modal__corpo">
+          <p className="nova-campanha-modal__texto">
+            Defina a campanha que deseja iniciar para os contatos selecionados.
           </p>
 
           <label className="campo">
@@ -119,27 +103,22 @@ export default function IniciarCampanhaModal({
               placeholder="Olá [nome], tudo bem? ..."
             />
           </label>
-          <p className="iniciar-campanha-modal__dica">
+          <p className="nova-campanha-modal__dica">
             Use <code>[nome]</code> para inserir o primeiro nome do contato ao visualizar ou copiar.
           </p>
         </div>
 
         <footer className="modal__rodape">
-          <button
-            type="button"
-            className="btn btn--secundario"
-            onClick={onFechar}
-            disabled={salvando}
-          >
+          <button type="button" className="btn btn--secundario" onClick={onFechar}>
             Cancelar
           </button>
           <button
             type="button"
             className="btn btn--primario"
-            onClick={() => void confirmar()}
-            disabled={salvando || !podeConfirmar}
+            onClick={confirmar}
+            disabled={!podeConfirmar}
           >
-            {salvando ? 'Iniciando...' : 'Iniciar campanha'}
+            Continuar
           </button>
         </footer>
       </div>

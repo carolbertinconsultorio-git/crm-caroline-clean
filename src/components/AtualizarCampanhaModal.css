@@ -1,0 +1,28 @@
+.modal--atualizar-campanha {
+  width: min(520px, 100%);
+}
+
+.atualizar-campanha-modal__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.atualizar-campanha-modal__texto {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.atualizar-campanha-modal__dica {
+  margin: -0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.atualizar-campanha-modal__dica code {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
