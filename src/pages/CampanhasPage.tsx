@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import CampanhaDetalheDrawer from '../components/CampanhaDetalheDrawer'
+import EditarCampanhaModal, { type DadosEdicaoCampanha } from '../components/EditarCampanhaModal'
 import EncerrarCampanhaModal from '../components/EncerrarCampanhaModal'
 import { listarCampanhas } from '../services/campanhaService'
 import type { OrigemContatos } from '../features/contatos/carregarContatos'
@@ -12,6 +13,7 @@ type CampanhasPageProps = {
   contatos: Contato[]
   origemContatos: OrigemContatos
   onEncerrarCampanhaEntidade: (campanha: Campanha) => Promise<Campanha>
+  onEditarCampanhaEntidade: (campanha: Campanha, dados: DadosEdicaoCampanha) => Promise<Campanha>
 }
 
 const TIPO_LABELS: Record<TipoCampanha, string> = {
@@ -88,11 +90,13 @@ export default function CampanhasPage({
   contatos,
   origemContatos,
   onEncerrarCampanhaEntidade,
+  onEditarCampanhaEntidade,
 }: CampanhasPageProps) {
   const [campanhas, setCampanhas] = useState<Campanha[]>([])
   const [carregando, setCarregando] = useState(true)
   const [campanhaSelecionada, setCampanhaSelecionada] = useState<Campanha | null>(null)
   const [modalEncerrarAberto, setModalEncerrarAberto] = useState(false)
+  const [modalEditarAberto, setModalEditarAberto] = useState(false)
 
   useEffect(() => {
     if (origemContatos !== 'firestore') {
@@ -151,6 +155,20 @@ export default function CampanhasPage({
     setModalEncerrarAberto(false)
   }
 
+  async function confirmarEditarCampanha(dados: DadosEdicaoCampanha) {
+    if (!campanhaSelecionada) return
+
+    const campanhaAtualizada = await onEditarCampanhaEntidade(campanhaSelecionada, dados)
+    setCampanhas((atual) =>
+      atual.map((campanha) => (campanha.id === campanhaAtualizada.id ? campanhaAtualizada : campanha)),
+    )
+    setCampanhaSelecionada(campanhaAtualizada)
+    setModalEditarAberto(false)
+  }
+
+  const campanhaEditavel =
+    campanhaSelecionada?.status === 'ATIVA' || campanhaSelecionada?.status === 'RASCUNHO'
+
   return (
     <div className="campanhas-page">
       <header className="campanhas-page__cabecalho">
@@ -195,11 +213,22 @@ export default function CampanhasPage({
           campanha={campanhaSelecionada}
           contatos={contatos}
           onFechar={() => setCampanhaSelecionada(null)}
+          onEditar={
+            campanhaEditavel ? () => setModalEditarAberto(true) : undefined
+          }
           onEncerrar={
             campanhaSelecionada.status === 'ATIVA'
               ? () => setModalEncerrarAberto(true)
               : undefined
           }
+        />
+      )}
+
+      {modalEditarAberto && campanhaSelecionada && campanhaEditavel && (
+        <EditarCampanhaModal
+          campanha={campanhaSelecionada}
+          onFechar={() => setModalEditarAberto(false)}
+          onConfirmar={confirmarEditarCampanha}
         />
       )}
 

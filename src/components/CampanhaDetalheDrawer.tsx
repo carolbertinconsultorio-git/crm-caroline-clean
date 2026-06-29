@@ -9,6 +9,7 @@ type CampanhaDetalheDrawerProps = {
   campanha: Campanha
   contatos: Contato[]
   onFechar: () => void
+  onEditar?: () => void
   onEncerrar?: () => void
 }
 
@@ -28,6 +29,7 @@ export default function CampanhaDetalheDrawer({
   campanha,
   contatos,
   onFechar,
+  onEditar,
   onEncerrar,
 }: CampanhaDetalheDrawerProps) {
   const participantes = useMemo(
@@ -37,6 +39,10 @@ export default function CampanhaDetalheDrawer({
         .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
     [contatos, campanha.id],
   )
+
+  const podeEditar =
+    (campanha.status === 'ATIVA' || campanha.status === 'RASCUNHO') && Boolean(onEditar)
+  const podeEncerrar = campanha.status === 'ATIVA' && Boolean(onEncerrar)
 
   return (
     <div className="campanha-drawer-overlay" onClick={onFechar} role="presentation">
@@ -117,11 +123,18 @@ export default function CampanhaDetalheDrawer({
           </section>
         </div>
 
-        {campanha.status === 'ATIVA' && onEncerrar && (
+        {(podeEditar || podeEncerrar) && (
           <footer className="campanha-drawer__rodape">
-            <button type="button" className="btn btn--perigo" onClick={onEncerrar}>
-              Encerrar campanha
-            </button>
+            {podeEditar && (
+              <button type="button" className="btn btn--secundario" onClick={onEditar}>
+                Editar campanha
+              </button>
+            )}
+            {podeEncerrar && (
+              <button type="button" className="btn btn--perigo" onClick={onEncerrar}>
+                Encerrar campanha
+              </button>
+            )}
           </footer>
         )}
       </aside>

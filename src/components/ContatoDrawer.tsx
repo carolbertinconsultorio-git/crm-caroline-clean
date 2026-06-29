@@ -1,15 +1,19 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Campanha, StatusCampanha, TipoCampanha } from '../types/campanha'
 import type { Contato } from '../types/contato'
 import type { ContatoStatus } from '../types/contatoStatus'
 import { OBJETIVO_FOLLOW_UP_LABELS } from '../types/objetivoFollowUp'
 import { TODOS_OS_STATUS, dataRelativa, formatarData } from '../utils/contatoHelpers'
 import { personalizarMensagemCampanha } from '../utils/campanhaMensagem'
+import { resolverDadosCampanhaContato } from '../utils/resolverDadosCampanhaContato'
 import { STATUS_FRASES } from '../utils/statusHumano'
 import BotaoConversar from './BotaoConversar'
 import './ContatoDrawer.css'
 
 type ContatoDrawerProps = {
   contato: Contato
+  campanhas: Campanha[]
+  campanhasCarregadas: boolean
   onFechar: () => void
   onConcluirFollowUp: () => void
   onAdiar: () => void
@@ -69,8 +73,22 @@ function formularioParaContato(contato: Contato, formulario: FormularioEdicao): 
   }
 }
 
+const TIPO_CAMPANHA_LABELS: Record<TipoCampanha, string> = {
+  REATIVACAO: 'Reativação',
+  INDICACAO: 'Indicação',
+  PERSONALIZADA: 'Personalizada',
+}
+
+const STATUS_CAMPANHA_LABELS: Record<StatusCampanha, string> = {
+  RASCUNHO: 'Rascunho',
+  ATIVA: 'Ativa',
+  ENCERRADA: 'Encerrada',
+}
+
 export default function ContatoDrawer({
   contato,
+  campanhas,
+  campanhasCarregadas,
   onFechar,
   onConcluirFollowUp,
   onAdiar,
@@ -96,15 +114,21 @@ export default function ContatoDrawer({
     contato.objetivoFollowUp === undefined
 
   const temCampanhaAtiva = contato.objetivoFollowUp !== undefined
-  const temCampanhaRegistrada = Boolean(contato.campanhaNome)
-  const mensagemCampanhaPersonalizada = contato.campanhaMensagem
-    ? personalizarMensagemCampanha(contato.campanhaMensagem, contato.nome)
+
+  const dadosCampanha = useMemo(
+    () => resolverDadosCampanhaContato(contato, campanhas, campanhasCarregadas),
+    [contato, campanhas, campanhasCarregadas],
+  )
+
+  const temCampanhaRegistrada = dadosCampanha.temDadosCampanha
+  const mensagemCampanhaPersonalizada = dadosCampanha.mensagem
+    ? personalizarMensagemCampanha(dadosCampanha.mensagem, contato.nome)
     : ''
 
   useEffect(() => {
     setMensagemCampanhaVisivel(false)
     setMensagemCopiada(false)
-  }, [contato.id, contato.campanhaMensagem])
+  }, [contato.id, dadosCampanha.mensagem])
 
   useEffect(() => {
     if (!modoEdicao) {
@@ -364,23 +388,42 @@ export default function ContatoDrawer({
                       {OBJETIVO_FOLLOW_UP_LABELS[contato.objetivoFollowUp]}
                     </p>
                   )}
-                  {contato.campanhaNome && (
+                  {dadosCampanha.campanhaNaoEncontrada && (
+                    <p className="drawer__campanha-ativa-aviso">Campanha não encontrada</p>
+                  )}
+                  {dadosCampanha.nome && (
                     <p className="drawer__campanha-ativa-meta">
                       <span className="drawer__campanha-ativa-meta-rotulo">Campanha:</span>
                       <span className="drawer__campanha-ativa-meta-valor">
-                        {contato.campanhaNome}
+                        {dadosCampanha.nome}
                       </span>
                     </p>
                   )}
-                  {contato.campanhaIniciadaEm && (
+                  {dadosCampanha.tipo && (
+                    <p className="drawer__campanha-ativa-meta">
+                      <span className="drawer__campanha-ativa-meta-rotulo">Tipo:</span>
+                      <span className="drawer__campanha-ativa-meta-valor">
+                        {TIPO_CAMPANHA_LABELS[dadosCampanha.tipo]}
+                      </span>
+                    </p>
+                  )}
+                  {dadosCampanha.status && (
+                    <p className="drawer__campanha-ativa-meta">
+                      <span className="drawer__campanha-ativa-meta-rotulo">Status:</span>
+                      <span className="drawer__campanha-ativa-meta-valor">
+                        {STATUS_CAMPANHA_LABELS[dadosCampanha.status]}
+                      </span>
+                    </p>
+                  )}
+                  {dadosCampanha.dataInicio && (
                     <p className="drawer__campanha-ativa-meta">
                       <span className="drawer__campanha-ativa-meta-rotulo">Iniciada em:</span>
                       <span className="drawer__campanha-ativa-meta-valor">
-                        {formatarData(contato.campanhaIniciadaEm)}
+                        {formatarData(dadosCampanha.dataInicio)}
                       </span>
                     </p>
                   )}
-                  {contato.campanhaMensagem && (
+                  {dadosCampanha.mensagem && (
                     <div className="drawer__campanha-mensagem">
                       <div className="drawer__campanha-mensagem-acoes">
                         <button

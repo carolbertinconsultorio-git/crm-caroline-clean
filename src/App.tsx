@@ -8,7 +8,7 @@ import NovoContatoModal from './components/NovoContatoModal'
 import RemoverContatoModal from './components/RemoverContatoModal'
 import { carregarContatos, type OrigemContatos } from './features/contatos/carregarContatos'
 import { useAuth } from './hooks/useAuth'
-import { encerrarCampanha as encerrarCampanhaFirestore } from './services/campanhaService'
+import { encerrarCampanha as encerrarCampanhaFirestore, atualizarCampanha as atualizarCampanhaFirestore, listarCampanhas } from './services/campanhaService'
 import { atualizarContato, criarContato, removerContato } from './services/contatoService'
 import AppLayout from './layouts/AppLayout'
 import type { TelaAtiva } from './components/Sidebar'
@@ -36,6 +36,7 @@ import type { ConfiguracaoNovaCampanha } from './types/configuracaoCampanha'
 import type { EstadoFiltrosContatos } from './utils/filtrosContatos'
 import { criarCampanhaEntidadeEmFirestore } from './utils/criarCampanhaEntidade'
 import { desvincularContatoDaCampanha } from './utils/desvincularContatoDaCampanha'
+import type { DadosEdicaoCampanha } from './components/EditarCampanhaModal'
 
 function gerarIdMockLocal(contatos: Contato[]): string {
   const idsNumericos = contatos
@@ -131,6 +132,8 @@ function App() {
     null,
   )
   const [contatoSelecionadoId, setContatoSelecionadoId] = useState<string | null>(null)
+  const [campanhas, setCampanhas] = useState<Campanha[]>([])
+  const [carregandoCampanhas, setCarregandoCampanhas] = useState(false)
   const [followUpContatoId, setFollowUpContatoId] = useState<string | null>(null)
   const [adiarContatoId, setAdiarContatoId] = useState<string | null>(null)
   const [modalNovoContatoAberto, setModalNovoContatoAberto] = useState(false)
@@ -183,6 +186,36 @@ function App() {
       ativo = false
     }
   }, [status])
+
+  useEffect(() => {
+    if (status !== 'autorizado' || origemContatos !== 'firestore') {
+      setCampanhas([])
+      setCarregandoCampanhas(false)
+      return
+    }
+
+    let ativo = true
+    setCarregandoCampanhas(true)
+
+    listarCampanhas()
+      .then((lista) => {
+        if (!ativo) return
+        setCampanhas(lista)
+      })
+      .catch((erro) => {
+        console.error('Não foi possível carregar campanhas.', erro)
+        if (!ativo) return
+        setCampanhas([])
+      })
+      .finally(() => {
+        if (!ativo) return
+        setCarregandoCampanhas(false)
+      })
+
+    return () => {
+      ativo = false
+    }
+  }, [status, origemContatos])
 
   function abrirContato(id: string) {
     setContatoSelecionadoId(id)
@@ -359,6 +392,7 @@ function App() {
       }
       const campanha = await criarCampanhaEntidadeEmFirestore(configCampanha, origemContatos)
       if (campanha) {
+        setCampanhas((atual) => [...atual, campanha])
         contatosParaSalvar = contatosParaSalvar.map((contato) => ({
           ...contato,
           campanhaId: campanha.id,
@@ -406,6 +440,7 @@ function App() {
     if (contatosParaSalvar.length > 0) {
       const campanha = await criarCampanhaEntidadeEmFirestore(config, origemContatos)
       if (campanha) {
+        setCampanhas((atual) => [...atual, campanha])
         contatosParaSalvar = contatosParaSalvar.map((contato) => ({
           ...contato,
           campanhaId: campanha.id,
@@ -519,12 +554,48 @@ function App() {
     )
 
     const agora = new Date().toISOString()
-    return {
+    const campanhaAtualizada = {
       ...campanha,
-      status: 'ENCERRADA',
+      status: 'ENCERRADA' as const,
       dataFim: agora.slice(0, 10),
       atualizadaEm: agora,
     }
+
+    setCampanhas((atual) =>
+      atual.map((item) => (item.id === campanhaAtualizada.id ? campanhaAtualizada : item)),
+    )
+
+    return campanhaAtualizada
+  }
+
+  async function editarCampanhaEntidade(
+    campanha: Campanha,
+    dados: DadosEdicaoCampanha,
+  ): Promise<Campanha> {
+    const agora = new Date().toISOString()
+    const nome = dados.nome.trim()
+    const mensagemTrim = dados.mensagem.trim()
+
+    if (origemContatos === 'firestore') {
+      await atualizarCampanhaFirestore(campanha.id, {
+        nome,
+        mensagem: mensagemTrim ? mensagemTrim : null,
+        atualizadaEm: agora,
+      })
+    }
+
+    const campanhaAtualizada = {
+      ...campanha,
+      nome,
+      mensagem: mensagemTrim || undefined,
+      atualizadaEm: agora,
+    }
+
+    setCampanhas((atual) =>
+      atual.map((item) => (item.id === campanhaAtualizada.id ? campanhaAtualizada : item)),
+    )
+
+    return campanhaAtualizada
   }
 
   function abrirModalNovoContato() {
@@ -665,6 +736,7 @@ function App() {
             contatos={contatos}
             origemContatos={origemContatos}
             onEncerrarCampanhaEntidade={encerrarCampanhaEntidade}
+            onEditarCampanhaEntidade={editarCampanhaEntidade}
           />
         )}
         {telaAtiva === 'oportunidades' && (
@@ -678,6 +750,8 @@ function App() {
       {contatoSelecionado && (
         <ContatoDrawer
           contato={contatoSelecionado}
+          campanhas={campanhas}
+          campanhasCarregadas={!carregandoCampanhas}
           onFechar={fecharContato}
           onConcluirFollowUp={() => abrirConcluirFollowUp(contatoSelecionado.id)}
           onAdiar={() => abrirAdiar(contatoSelecionado.id)}

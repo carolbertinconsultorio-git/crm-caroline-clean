@@ -1,0 +1,25 @@
+.modal-overlay--editar-campanha {
+  z-index: 250;
+}
+
+.modal--editar-campanha {
+  width: min(720px, 100%);
+}
+
+.editar-campanha-modal__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.375rem;
+}
+
+.editar-campanha-modal__dica {
+  margin: -0.625rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.editar-campanha-modal__dica code {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
