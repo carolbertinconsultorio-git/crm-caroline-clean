@@ -44,6 +44,62 @@
   border-left-color: var(--color-sage);
 }
 
+.contato-card--aguardando {
+  border-left-color: color-mix(in srgb, var(--color-text-muted) 32%, var(--color-border));
+}
+
+.contato-card--aguardando-resposta {
+  background: color-mix(in srgb, var(--color-bg) 72%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-border) 88%, transparent);
+  border-left-width: 3px;
+  border-left-color: color-mix(in srgb, var(--color-text-muted) 28%, var(--color-border));
+}
+
+.contato-card--aguardando-resposta.contato-card--atrasado,
+.contato-card--aguardando-resposta.contato-card--hoje,
+.contato-card--aguardando-resposta.contato-card--semana {
+  border-left-color: color-mix(in srgb, var(--color-text-muted) 32%, var(--color-border));
+}
+
+.contato-card--aguardando-resposta .contato-card__nome {
+  font-weight: 550;
+  color: color-mix(in srgb, var(--color-text) 78%, var(--color-text-muted));
+}
+
+.contato-card--aguardando-resposta .contato-card__origem,
+.contato-card--aguardando-resposta .contato-card__datas dt,
+.contato-card--aguardando-resposta .contato-card__datas dd {
+  color: color-mix(in srgb, var(--color-text-muted) 92%, var(--color-text));
+}
+
+.contato-card--aguardando-resposta .contato-card__status,
+.contato-card--aguardando-resposta .contato-card__objetivo {
+  opacity: 0.88;
+}
+
+.contato-card--aguardando-resposta .contato-card__corpo:hover {
+  background: color-mix(in srgb, var(--color-bg) 55%, var(--color-surface));
+}
+
+.contato-card__badge-aguardando {
+  display: inline-block;
+  padding: 0.2rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--color-text-muted) 12%, var(--color-surface));
+  color: color-mix(in srgb, var(--color-text-muted) 88%, var(--color-text));
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+}
+
+.contato-card__mensagem-enviada {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--color-text-muted) 95%, var(--color-text));
+  font-style: italic;
+}
+
 .contato-card__corpo {
   flex: 1;
   min-width: 0;
@@ -153,6 +209,22 @@
 
 .contato-card .btn-conversar__aviso {
   display: none;
+}
+
+.contato-card .btn--discreto {
+  padding: 0.375rem 0.625rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.contato-card .btn--discreto:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-bg) 60%, var(--color-surface));
 }
 
 @media (max-width: 900px) {

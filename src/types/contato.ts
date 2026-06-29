@@ -25,4 +25,5 @@ export interface Contato {
   campanhaNome?: string
   campanhaIniciadaEm?: string
   campanhaMensagem?: string
+  aguardandoRespostaDesde?: string
 }

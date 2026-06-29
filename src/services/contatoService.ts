@@ -21,11 +21,12 @@ const COLECAO_CONTATOS = 'contatos'
 type ContatoSemId = Omit<Contato, 'id'>
 type ContatoAtualizacao = Omit<
   Partial<ContatoSemId>,
-  'objetivoFollowUp' | 'observacoes' | 'campanhaMensagem'
+  'objetivoFollowUp' | 'observacoes' | 'campanhaMensagem' | 'aguardandoRespostaDesde'
 > & {
   objetivoFollowUp?: ObjetivoFollowUp | null
   observacoes?: string | null
   campanhaMensagem?: string | null
+  aguardandoRespostaDesde?: string | null
 }
 
 function resolverResultadoReativacao(valor: unknown): ResultadoContato | undefined {
@@ -81,6 +82,24 @@ function resolverNumeroOpcional(valor: unknown): number | undefined {
   return Number.isFinite(numero) ? numero : undefined
 }
 
+function normalizarCampoDataHora(valor: unknown): string | undefined {
+  if (valor == null || valor === '') return undefined
+
+  if (typeof valor === 'string') {
+    return valor
+  }
+
+  if (
+    typeof valor === 'object' &&
+    'toDate' in valor &&
+    typeof valor.toDate === 'function'
+  ) {
+    return valor.toDate().toISOString()
+  }
+
+  return String(valor)
+}
+
 function normalizarCampoData(valor: unknown): string {
   if (valor == null || valor === '') return ''
 
@@ -129,6 +148,7 @@ function documentoParaContato(id: string, dados: DocumentData): Contato {
       ? normalizarCampoData(dados.campanhaIniciadaEm)
       : undefined,
     campanhaMensagem: dados.campanhaMensagem ? String(dados.campanhaMensagem) : undefined,
+    aguardandoRespostaDesde: normalizarCampoDataHora(dados.aguardandoRespostaDesde),
   }
 }
 
@@ -189,6 +209,10 @@ function contatoParaDocumento(dados: ContatoSemId): DocumentData {
 
   if (dados.campanhaMensagem !== undefined) {
     documento.campanhaMensagem = dados.campanhaMensagem
+  }
+
+  if (dados.aguardandoRespostaDesde !== undefined) {
+    documento.aguardandoRespostaDesde = dados.aguardandoRespostaDesde
   }
 
   return documento

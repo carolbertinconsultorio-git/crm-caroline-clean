@@ -10,6 +10,8 @@ type PainelDiaProps = {
   onAbrirContato: (id: string) => void
   onConcluirFollowUp: (id: string) => void
   onAdiar: (id: string) => void
+  onMensagemEnviada: (id: string) => void
+  onDesfazerEnvio: (id: string) => void
 }
 
 function SecaoContatos({
@@ -21,6 +23,8 @@ function SecaoContatos({
   onAbrirContato,
   onConcluirFollowUp,
   onAdiar,
+  onMensagemEnviada,
+  onDesfazerEnvio,
 }: {
   titulo: string
   descricao: string
@@ -30,6 +34,8 @@ function SecaoContatos({
   onAbrirContato: (id: string) => void
   onConcluirFollowUp: (id: string) => void
   onAdiar: (id: string) => void
+  onMensagemEnviada?: (id: string) => void
+  onDesfazerEnvio?: (id: string) => void
 }) {
   return (
     <section className={`secao secao--${urgencia}`}>
@@ -49,6 +55,8 @@ function SecaoContatos({
               onAbrirContato={onAbrirContato}
               onConcluirFollowUp={onConcluirFollowUp}
               onAdiar={onAdiar}
+              onMensagemEnviada={onMensagemEnviada}
+              onDesfazerEnvio={onDesfazerEnvio}
             />
           ))}
         </div>
@@ -62,9 +70,11 @@ export default function PainelDia({
   onAbrirContato,
   onConcluirFollowUp,
   onAdiar,
+  onMensagemEnviada,
+  onDesfazerEnvio,
 }: PainelDiaProps) {
   const hoje = inicioDoDia(new Date())
-  const { atrasados, paraHoje, estaSemana } = agruparContatos(contatos, hoje)
+  const { atrasados, paraHoje, estaSemana, aguardandoResposta } = agruparContatos(contatos, hoje)
 
   const dataFormatada = hoje.toLocaleDateString('pt-BR', {
     weekday: 'long',
@@ -110,6 +120,7 @@ export default function PainelDia({
           onAbrirContato={onAbrirContato}
           onConcluirFollowUp={onConcluirFollowUp}
           onAdiar={onAdiar}
+          onMensagemEnviada={onMensagemEnviada}
         />
         <SecaoContatos
           titulo="Para hoje"
@@ -120,6 +131,18 @@ export default function PainelDia({
           onAbrirContato={onAbrirContato}
           onConcluirFollowUp={onConcluirFollowUp}
           onAdiar={onAdiar}
+          onMensagemEnviada={onMensagemEnviada}
+        />
+        <SecaoContatos
+          titulo="Aguardando resposta"
+          descricao="Mensagem enviada — aguardando retorno"
+          contatos={aguardandoResposta}
+          urgencia="aguardando"
+          vazio="Nenhum contato aguardando resposta."
+          onAbrirContato={onAbrirContato}
+          onConcluirFollowUp={onConcluirFollowUp}
+          onAdiar={onAdiar}
+          onDesfazerEnvio={onDesfazerEnvio}
         />
         <SecaoContatos
           titulo="Próximos dias"
@@ -130,6 +153,7 @@ export default function PainelDia({
           onAbrirContato={onAbrirContato}
           onConcluirFollowUp={onConcluirFollowUp}
           onAdiar={onAdiar}
+          onMensagemEnviada={onMensagemEnviada}
         />
       </div>
     </div>

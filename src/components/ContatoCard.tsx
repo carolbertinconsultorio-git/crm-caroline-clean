@@ -2,7 +2,7 @@ import type { Contato } from '../types/contato'
 import type { Urgencia } from '../utils/agruparContatos'
 import { OBJETIVO_FOLLOW_UP_LABELS } from '../types/objetivoFollowUp'
 import { STATUS_FRASES } from '../utils/statusHumano'
-import { formatarData } from '../utils/contatoHelpers'
+import { formatarData, formatarMensagemEnviadaEm } from '../utils/contatoHelpers'
 import BotaoConversar from './BotaoConversar'
 import './ContatoCard.css'
 
@@ -12,6 +12,8 @@ type ContatoCardProps = {
   onAbrirContato?: (id: string) => void
   onConcluirFollowUp?: (id: string) => void
   onAdiar?: (id: string) => void
+  onMensagemEnviada?: (id: string) => void
+  onDesfazerEnvio?: (id: string) => void
   compacto?: boolean
   selecionavel?: boolean
   selecionado?: boolean
@@ -24,14 +26,22 @@ export default function ContatoCard({
   onAbrirContato,
   onConcluirFollowUp,
   onAdiar,
+  onMensagemEnviada,
+  onDesfazerEnvio,
   compacto = false,
   selecionavel = false,
   selecionado = false,
   onAlternarSelecao,
 }: ContatoCardProps) {
+  const aguardandoResposta = Boolean(contato.aguardandoRespostaDesde)
+  const textoMensagemEnviada =
+    aguardandoResposta && contato.aguardandoRespostaDesde
+      ? formatarMensagemEnviadaEm(contato.aguardandoRespostaDesde)
+      : undefined
+
   return (
     <article
-      className={`contato-card contato-card--${urgencia}${compacto ? ' contato-card--compacto' : ''}${selecionado ? ' contato-card--selecionado' : ''}`}
+      className={`contato-card contato-card--${urgencia}${compacto ? ' contato-card--compacto' : ''}${selecionado ? ' contato-card--selecionado' : ''}${aguardandoResposta ? ' contato-card--aguardando-resposta' : ''}`}
     >
       {selecionavel && (
         <label className="contato-card__selecao">
@@ -61,7 +71,13 @@ export default function ContatoCard({
               {OBJETIVO_FOLLOW_UP_LABELS[contato.objetivoFollowUp]}
             </span>
           )}
+          {aguardandoResposta && (
+            <span className="contato-card__badge-aguardando">⏳ Aguardando resposta</span>
+          )}
         </div>
+        {textoMensagemEnviada && (
+          <p className="contato-card__mensagem-enviada">{textoMensagemEnviada}</p>
+        )}
         <dl className="contato-card__datas">
           <div>
             <dt>Último contato</dt>
@@ -75,6 +91,24 @@ export default function ContatoCard({
       </button>
       <div className="contato-card__acoes">
         <BotaoConversar telefone={contato.telefone} />
+        {onMensagemEnviada && !aguardandoResposta && (
+          <button
+            type="button"
+            className="btn btn--secundario"
+            onClick={() => onMensagemEnviada(contato.id)}
+          >
+            Mensagem enviada
+          </button>
+        )}
+        {onDesfazerEnvio && aguardandoResposta && (
+          <button
+            type="button"
+            className="btn btn--discreto"
+            onClick={() => onDesfazerEnvio(contato.id)}
+          >
+            Desfazer envio
+          </button>
+        )}
         <button
           type="button"
           className="btn btn--primario"

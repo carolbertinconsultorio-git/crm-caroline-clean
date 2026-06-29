@@ -1,7 +1,7 @@
 import type { Contato } from '../types/contato'
 import { inicioDoDia, parseData } from '../utils/contatoHelpers'
 
-export type Urgencia = 'atrasado' | 'hoje' | 'semana'
+export type Urgencia = 'atrasado' | 'hoje' | 'semana' | 'aguardando'
 
 export function contatoEstaFollowUpAtrasado(contato: Contato, hoje: Date): boolean {
   if (contato.status === 'PERDIDO' || contato.status === 'PACIENTE_ATIVO') return false
@@ -16,11 +16,17 @@ export function agruparContatos(contatos: Contato[], hoje: Date) {
   const atrasados: Contato[] = []
   const paraHoje: Contato[] = []
   const estaSemana: Contato[] = []
+  const aguardandoResposta: Contato[] = []
 
   const fimDaSemana = new Date(hoje)
   fimDaSemana.setDate(hoje.getDate() + 7)
 
   for (const contato of contatos) {
+    if (contato.aguardandoRespostaDesde) {
+      aguardandoResposta.push(contato)
+      continue
+    }
+
     if (contato.status === 'PERDIDO' || contato.status === 'PACIENTE_ATIVO') continue
     if (!contato.dataProximoFollowUp) continue
 
@@ -35,5 +41,9 @@ export function agruparContatos(contatos: Contato[], hoje: Date) {
     }
   }
 
-  return { atrasados, paraHoje, estaSemana }
+  aguardandoResposta.sort((a, b) =>
+    (a.aguardandoRespostaDesde ?? '').localeCompare(b.aguardandoRespostaDesde ?? ''),
+  )
+
+  return { atrasados, paraHoje, estaSemana, aguardandoResposta }
 }

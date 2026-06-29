@@ -102,6 +102,10 @@ function contatoParaDadosFirestore(contato: Contato): Omit<Contato, 'id'> {
     dados.campanhaMensagem = contato.campanhaMensagem
   }
 
+  if (contato.aguardandoRespostaDesde !== undefined) {
+    dados.aguardandoRespostaDesde = contato.aguardandoRespostaDesde
+  }
+
   return dados
 }
 
@@ -232,6 +236,38 @@ function App() {
   function confirmarAdiar(contatoAtualizado: Contato) {
     aplicarContatoAtualizado(contatoAtualizado)
     fecharAdiar()
+  }
+
+  function marcarMensagemEnviada(id: string) {
+    const aguardandoRespostaDesde = new Date().toISOString()
+
+    setContatos((atual) =>
+      atual.map((contato) =>
+        contato.id === id ? { ...contato, aguardandoRespostaDesde } : contato,
+      ),
+    )
+
+    if (origemContatos !== 'firestore') return
+
+    atualizarContato(id, { aguardandoRespostaDesde }).catch((erro) => {
+      console.error('Não foi possível marcar mensagem enviada no Firestore.', erro)
+    })
+  }
+
+  function desfazerMensagemEnviada(id: string) {
+    setContatos((atual) =>
+      atual.map((contato) => {
+        if (contato.id !== id) return contato
+        const { aguardandoRespostaDesde: _, ...resto } = contato
+        return resto
+      }),
+    )
+
+    if (origemContatos !== 'firestore') return
+
+    atualizarContato(id, { aguardandoRespostaDesde: null }).catch((erro) => {
+      console.error('Não foi possível desfazer mensagem enviada no Firestore.', erro)
+    })
   }
 
   function salvarContato(contatoAtualizado: Contato) {
@@ -528,6 +564,8 @@ function App() {
             onAbrirContato={abrirContato}
             onConcluirFollowUp={abrirConcluirFollowUp}
             onAdiar={abrirAdiar}
+            onMensagemEnviada={marcarMensagemEnviada}
+            onDesfazerEnvio={desfazerMensagemEnviada}
           />
         )}
         {telaAtiva === 'contatos' && (

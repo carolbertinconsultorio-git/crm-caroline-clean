@@ -105,6 +105,10 @@
   color: var(--color-sage);
 }
 
+.secao--aguardando .secao__titulo {
+  color: var(--color-text-muted);
+}
+
 .secao__descricao {
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
