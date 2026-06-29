@@ -1,0 +1,223 @@
+.campanha-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(26, 46, 36, 0.25);
+}
+
+.campanha-drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(440px, 100vw);
+  height: 100%;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -8px 0 32px rgba(26, 46, 36, 0.1);
+}
+
+.campanha-drawer__cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-shrink: 0;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.campanha-drawer__titulo {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.campanha-drawer__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.625rem;
+}
+
+.campanha-drawer__tipo,
+.campanha-drawer__status {
+  display: inline-block;
+  padding: 0.2rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.campanha-drawer__tipo {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.campanha-drawer__status {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.campanha-drawer__status--ativa {
+  background: var(--color-sage-light);
+  color: var(--color-sage);
+  border-color: transparent;
+}
+
+.campanha-drawer__fechar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.campanha-drawer__fechar:hover {
+  background: var(--color-bg);
+}
+
+.campanha-drawer__corpo {
+  flex: 1;
+  min-height: 0;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.campanha-drawer__detalhes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.25rem;
+  margin: 0 0 2rem;
+}
+
+.campanha-drawer__detalhe-largo {
+  grid-column: 1 / -1;
+}
+
+.campanha-drawer__detalhes div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.campanha-drawer__detalhes dt {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.campanha-drawer__detalhes dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  white-space: pre-wrap;
+}
+
+.campanha-drawer__secao-titulo {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.campanha-drawer__participantes-contagem {
+  margin-left: 0.375rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.campanha-drawer__participantes-vazio {
+  margin: 0;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.campanha-drawer__participantes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.campanha-drawer__participante {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.campanha-drawer__participante-nome {
+  grid-column: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.campanha-drawer__participante-telefone {
+  grid-column: 1;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.campanha-drawer__participante-status {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  padding: 0.2rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--color-sage-light);
+  color: var(--color-sage);
+  white-space: nowrap;
+}
+
+.campanha-drawer__rodape {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.campanha-drawer__rodape .btn--perigo {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.campanha-drawer__rodape .btn--perigo:hover {
+  background: #a93226;
+}

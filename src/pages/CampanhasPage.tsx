@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
+import CampanhaDetalheDrawer from '../components/CampanhaDetalheDrawer'
+import EncerrarCampanhaModal from '../components/EncerrarCampanhaModal'
 import { listarCampanhas } from '../services/campanhaService'
 import type { OrigemContatos } from '../features/contatos/carregarContatos'
 import type { Campanha, StatusCampanha, TipoCampanha } from '../types/campanha'
+import type { Contato } from '../types/contato'
 import { formatarData } from '../utils/contatoHelpers'
 import './CampanhasPage.css'
 
 type CampanhasPageProps = {
+  contatos: Contato[]
   origemContatos: OrigemContatos
+  onEncerrarCampanhaEntidade: (campanha: Campanha) => Promise<Campanha>
 }
 
 const TIPO_LABELS: Record<TipoCampanha, string> = {
@@ -30,9 +35,11 @@ function ordenarCampanhas(campanhas: Campanha[]): Campanha[] {
 function SecaoCampanhas({
   titulo,
   campanhas,
+  onSelecionarCampanha,
 }: {
   titulo: string
   campanhas: Campanha[]
+  onSelecionarCampanha: (campanha: Campanha) => void
 }) {
   if (campanhas.length === 0) return null
 
@@ -44,7 +51,12 @@ function SecaoCampanhas({
       </h2>
       <div className="campanhas-secao__lista">
         {campanhas.map((campanha) => (
-          <article key={campanha.id} className={`campanha-card campanha-card--${campanha.status.toLowerCase()}`}>
+          <button
+            key={campanha.id}
+            type="button"
+            className={`campanha-card campanha-card--${campanha.status.toLowerCase()}`}
+            onClick={() => onSelecionarCampanha(campanha)}
+          >
             <header className="campanha-card__cabecalho">
               <h3 className="campanha-card__nome">{campanha.nome}</h3>
               <span className="campanha-card__status">{STATUS_LABELS[campanha.status]}</span>
@@ -65,16 +77,22 @@ function SecaoCampanhas({
                 </div>
               )}
             </dl>
-          </article>
+          </button>
         ))}
       </div>
     </section>
   )
 }
 
-export default function CampanhasPage({ origemContatos }: CampanhasPageProps) {
+export default function CampanhasPage({
+  contatos,
+  origemContatos,
+  onEncerrarCampanhaEntidade,
+}: CampanhasPageProps) {
   const [campanhas, setCampanhas] = useState<Campanha[]>([])
   const [carregando, setCarregando] = useState(true)
+  const [campanhaSelecionada, setCampanhaSelecionada] = useState<Campanha | null>(null)
+  const [modalEncerrarAberto, setModalEncerrarAberto] = useState(false)
 
   useEffect(() => {
     if (origemContatos !== 'firestore') {
@@ -117,6 +135,22 @@ export default function CampanhasPage({ origemContatos }: CampanhasPageProps) {
 
   const nenhumaCampanha = !carregando && campanhas.length === 0
 
+  const quantidadeParticipantesSelecionada = useMemo(() => {
+    if (!campanhaSelecionada) return 0
+    return contatos.filter((contato) => contato.campanhaId === campanhaSelecionada.id).length
+  }, [contatos, campanhaSelecionada])
+
+  async function confirmarEncerrarCampanha() {
+    if (!campanhaSelecionada) return
+
+    const campanhaAtualizada = await onEncerrarCampanhaEntidade(campanhaSelecionada)
+    setCampanhas((atual) =>
+      atual.map((campanha) => (campanha.id === campanhaAtualizada.id ? campanhaAtualizada : campanha)),
+    )
+    setCampanhaSelecionada(campanhaAtualizada)
+    setModalEncerrarAberto(false)
+  }
+
   return (
     <div className="campanhas-page">
       <header className="campanhas-page__cabecalho">
@@ -138,10 +172,43 @@ export default function CampanhasPage({ origemContatos }: CampanhasPageProps) {
 
       {!carregando && campanhas.length > 0 && (
         <div className="campanhas-page__secoes">
-          <SecaoCampanhas titulo="Ativas" campanhas={ativas} />
-          <SecaoCampanhas titulo="Rascunhos" campanhas={rascunhos} />
-          <SecaoCampanhas titulo="Encerradas" campanhas={encerradas} />
+          <SecaoCampanhas
+            titulo="Ativas"
+            campanhas={ativas}
+            onSelecionarCampanha={setCampanhaSelecionada}
+          />
+          <SecaoCampanhas
+            titulo="Rascunhos"
+            campanhas={rascunhos}
+            onSelecionarCampanha={setCampanhaSelecionada}
+          />
+          <SecaoCampanhas
+            titulo="Encerradas"
+            campanhas={encerradas}
+            onSelecionarCampanha={setCampanhaSelecionada}
+          />
         </div>
+      )}
+
+      {campanhaSelecionada && (
+        <CampanhaDetalheDrawer
+          campanha={campanhaSelecionada}
+          contatos={contatos}
+          onFechar={() => setCampanhaSelecionada(null)}
+          onEncerrar={
+            campanhaSelecionada.status === 'ATIVA'
+              ? () => setModalEncerrarAberto(true)
+              : undefined
+          }
+        />
+      )}
+
+      {modalEncerrarAberto && campanhaSelecionada && (
+        <EncerrarCampanhaModal
+          quantidadeParticipantes={quantidadeParticipantesSelecionada}
+          onFechar={() => setModalEncerrarAberto(false)}
+          onConfirmar={confirmarEncerrarCampanha}
+        />
       )}
     </div>
   )

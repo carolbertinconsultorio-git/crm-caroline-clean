@@ -21,12 +21,13 @@ const COLECAO_CONTATOS = 'contatos'
 type ContatoSemId = Omit<Contato, 'id'>
 type ContatoAtualizacao = Omit<
   Partial<ContatoSemId>,
-  'objetivoFollowUp' | 'observacoes' | 'campanhaMensagem' | 'aguardandoRespostaDesde'
+  'objetivoFollowUp' | 'observacoes' | 'campanhaMensagem' | 'aguardandoRespostaDesde' | 'campanhaId'
 > & {
   objetivoFollowUp?: ObjetivoFollowUp | null
   observacoes?: string | null
   campanhaMensagem?: string | null
   aguardandoRespostaDesde?: string | null
+  campanhaId?: string | null
 }
 
 function resolverResultadoReativacao(valor: unknown): ResultadoContato | undefined {

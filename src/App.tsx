@@ -8,6 +8,7 @@ import NovoContatoModal from './components/NovoContatoModal'
 import RemoverContatoModal from './components/RemoverContatoModal'
 import { carregarContatos, type OrigemContatos } from './features/contatos/carregarContatos'
 import { useAuth } from './hooks/useAuth'
+import { encerrarCampanha as encerrarCampanhaFirestore } from './services/campanhaService'
 import { atualizarContato, criarContato, removerContato } from './services/contatoService'
 import AppLayout from './layouts/AppLayout'
 import type { TelaAtiva } from './components/Sidebar'
@@ -30,9 +31,11 @@ import {
   type DadosAtualizacaoCampanha,
   type ResultadoCampanhaReativacaoLote,
 } from './utils/iniciarCampanhaLote'
+import type { Campanha } from './types/campanha'
 import type { ConfiguracaoNovaCampanha } from './types/configuracaoCampanha'
 import type { EstadoFiltrosContatos } from './utils/filtrosContatos'
 import { criarCampanhaEntidadeEmFirestore } from './utils/criarCampanhaEntidade'
+import { desvincularContatoDaCampanha } from './utils/desvincularContatoDaCampanha'
 
 function gerarIdMockLocal(contatos: Contato[]): string {
   const idsNumericos = contatos
@@ -483,6 +486,47 @@ function App() {
     })
   }
 
+  async function encerrarCampanhaEntidade(campanha: Campanha): Promise<Campanha> {
+    const participantes = contatos.filter((contato) => contato.campanhaId === campanha.id)
+    const contatosAtualizados = participantes.map(desvincularContatoDaCampanha)
+    const idsAtualizados = new Set(contatosAtualizados.map((contato) => contato.id))
+
+    if (origemContatos === 'firestore') {
+      await encerrarCampanhaFirestore(campanha.id)
+
+      await Promise.all(
+        contatosAtualizados.map((contato) =>
+          atualizarContato(contato.id, {
+            campanhaId: null,
+            objetivoFollowUp: null,
+            aguardandoRespostaDesde: null,
+          }).catch((erro) => {
+            console.error(
+              'Não foi possível desvincular contato da campanha no Firestore.',
+              contato.id,
+              erro,
+            )
+          }),
+        ),
+      )
+    }
+
+    setContatos((atual) =>
+      atual.map((contato) => {
+        if (!idsAtualizados.has(contato.id)) return contato
+        return contatosAtualizados.find((atualizado) => atualizado.id === contato.id) ?? contato
+      }),
+    )
+
+    const agora = new Date().toISOString()
+    return {
+      ...campanha,
+      status: 'ENCERRADA',
+      dataFim: agora.slice(0, 10),
+      atualizadaEm: agora,
+    }
+  }
+
   function abrirModalNovoContato() {
     setModalNovoContatoAberto(true)
   }
@@ -617,7 +661,11 @@ function App() {
           />
         )}
         {telaAtiva === 'campanhas' && (
-          <CampanhasPage origemContatos={origemContatos} />
+          <CampanhasPage
+            contatos={contatos}
+            origemContatos={origemContatos}
+            onEncerrarCampanhaEntidade={encerrarCampanhaEntidade}
+          />
         )}
         {telaAtiva === 'oportunidades' && (
           <OportunidadesPage

@@ -1,0 +1,42 @@
+.modal-overlay--encerrar-campanha {
+  z-index: 250;
+}
+
+.modal--encerrar-campanha {
+  width: min(480px, 100%);
+}
+
+.encerrar-campanha-modal__corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.encerrar-campanha-modal__pergunta {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.encerrar-campanha-modal__aviso {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.modal--encerrar-campanha .btn--perigo {
+  background: var(--color-danger);
+  color: #fff;
+  border: 1px solid transparent;
+}
+
+.modal--encerrar-campanha .btn--perigo:hover:not(:disabled) {
+  background: #a93226;
+}
+
+.modal--encerrar-campanha .btn--perigo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
